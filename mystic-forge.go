@@ -124,7 +124,7 @@ func main() {
 	ebiten.SetWindowTitle("Blacksmith Game")
 
 	// Load the background image
-	backgroundImg, _, _ := ebitenutil.NewImageFromFile("background.jpg", ebiten.FilterDefault)
+	backgroundImg, _, _ := ebitenutil.NewImageFromFile("assets/forge-main.png", ebiten.FilterDefault)
 
 	// Implement game logic here
 	fmt.Println("Welcome to the blacksmith game!")
@@ -150,7 +150,7 @@ type Game struct {
 	Background *ebiten.Image
 }
 
-func (g *Game) Update() error {
+func (g *Game) Update(screen *ebiten.Image) error {
 	// Game update logic here
 	return nil
 }
