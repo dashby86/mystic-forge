@@ -1,4 +1,3 @@
-name: yml
 services:
   mysql:
     environment:
@@ -22,8 +21,8 @@ services:
     - type: bind
       source: /Users/dylanashby/mystic-forge/data/mysql
       target: /var/lib/mysql
-      bind:
-        create_host_path: true
+      #bind:
+      #  create_host_path: true
   traefik:
     command:
     - --api.insecure=true
@@ -63,8 +62,8 @@ services:
       source: /var/run/docker.sock
       target: /var/run/docker.sock
       read_only: true
-      bind:
-        create_host_path: true
+      #bind:
+      #  create_host_path: true
 networks:
   api:
     name: api
@@ -75,7 +74,9 @@ networks:
 secrets:
   MYSQL_ROOT_PASSWORD:
     name: yml_MYSQL_ROOT_PASSWORD
-    file: /Users/dylanashby/mystic-forge/data/secrets/MYSQL_ROOT_PASSWORD
+    #file: /Users/dylanashby/mystic-forge/data/secrets/MYSQL_ROOT_PASSWORD
+    file: /home/dashby/mystic-forge/data/secrets/MYSQL_ROOT_PASSWORD
   MYSQL_USER_PASSWORD:
     name: yml_MYSQL_USER_PASSWORD
-    file: /Users/dylanashby/mystic-forge/data/secrets/MYSQL_USER_PASSWORD
+    #file: /Users/dylanashby/mystic-forge/data/secrets/MYSQL_USER_PASSWORD
+    file: /home/dashby/mystic-forge/data/secrets/MYSQL_USER_PASSWORD

@@ -13,7 +13,7 @@ type SqlService struct {
 func (s SqlService) GetPlayerByID() (models.Player, error) {
 	player := models.Player{}
 	// Prepare the SQL statement
-	stmt, err := s.DB.Prepare("SELECT id, name FROM Player WHERE id = 1")
+	stmt, err := s.DB.Prepare("SELECT id, name FROM player WHERE id = 1")
 	if err != nil {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
@@ -24,4 +24,29 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
 	return player, nil
+}
+
+func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool, error) {
+	stmt, err := s.DB.Prepare("INSERT INTO player_gear (" +
+		"player_id, " +
+		"gear_slot_id, " +
+		"rarity_id, " +
+		"hp, " +
+		"attack, " +
+		"defense, " +
+		"speed, " +
+		"crit, " +
+		"dodge, " +
+		"block" +
+		")" +
+		"VALUES (? ? ? ? ? ? ? ? ? ?) ")
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare the SQL statement: %v", err)
+	}
+	defer stmt.Close()
+	// Execute the query
+	err = stmt.Exec(player.ID)
+	if err != nil {
+		return player, fmt.Errorf("failed to execute the query: %v", err)
+	}
 }

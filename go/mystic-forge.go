@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
@@ -14,28 +15,9 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 	"image/color"
 	"log"
-	"math/rand"
+	myForge "mf/forge"
 	sqlService "mf/services/sql"
 )
-
-type Gear struct {
-	Level   int
-	HP      int
-	Attack  int
-	Defense int
-	Speed   int
-}
-
-func craftGear() *Gear {
-	gear := &Gear{
-		Level:   1,
-		HP:      rand.Intn(100) + 1,
-		Attack:  rand.Intn(10) + 1,
-		Defense: rand.Intn(10) + 1,
-		Speed:   rand.Intn(5) + 1,
-	}
-	return gear
-}
 
 type Forge struct {
 	X, Y, Width, Height int
@@ -44,7 +26,7 @@ type Forge struct {
 const (
 	DBUser     = "app"       // Database username
 	DBPassword = "admin"     // Database password
-	DBHost     = "localhost" // Docker container hostname
+	DBHost     = "127.0.0.1" // Docker container hostname
 	DBPort     = "3309"      // MySQL port
 	DBName     = "app"       // Name of the database
 )
@@ -54,10 +36,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-	sqlService := sqlService.SqlService{
+	sService := sqlService.SqlService{
 		DB: db,
 	}
-	player, err := sqlService.GetPlayerByID()
+	player, err := sService.GetPlayerByID()
 	if err != nil {
 		log.Fatalf("Failed to query the database: %v", err)
 	}
@@ -82,7 +64,6 @@ func main() {
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		//widget.ContainerOpts.Bi.VisibleWhen)
 	)
-	//rootContainer.AddChild(textArea)
 
 	// Set the UI
 	ui := ebitenui.UI{
@@ -125,8 +106,11 @@ func (g *game) Update() error {
 			g.ShowCraftMenu()
 			// Craft equipment
 			fmt.Println("Crafting equipment...")
-			gear := craftGear()
-			fmt.Println("hp:", gear.HP)
+			//gear := models.Gear{}
+			gear := myForge.CraftGear()
+			spew.Dump(gear)
+			//gear := forge.CraftGear
+			fmt.Println("hp:", gear.Level)
 			g.Crafted = true
 		}
 	} else if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
@@ -192,15 +176,15 @@ func (g *game) ShowCraftMenu() {
 
 		// add a handler that reacts to clicking the button
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-			g.ui.Container.RemoveChildren()
-			fmt.Println("button clicked")
+			//g.ui.Container.RemoveChildren()
+			println("button clicked")
 		}),
 	)
 	//g.ui.Container.BackgroundImage.Draw(nineSlice)
 	buttonStackedLayout.AddChild(button)
 	//buttonStackedLayout.AddChild(widget.NewGraphic(widget.GraphicOpts.Image(buttonIcon)))
 	innerContainer.AddChild(buttonStackedLayout)
-	g.ui.Container.AddChild(innerContainer)
+	g.ui.Container.AddChild(button)
 }
 
 func loadFont(size float64) (font.Face, error) {
@@ -217,6 +201,7 @@ func loadFont(size float64) (font.Face, error) {
 }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
+	/**
 	buttonImage, _, err := ebitenutil.NewImageFromFile("assets/sell_menu.png")
 	if err != nil {
 		log.Fatal(err)
@@ -227,6 +212,18 @@ func loadButtonImage() (*widget.ButtonImage, error) {
 	hover := image.NewNineSlice(buttonImage, [3]int{100, 100, 100}, [3]int{63, 63, 63})
 
 	pressed := image.NewNineSlice(buttonImage, [3]int{100, 100, 100}, [3]int{63, 63, 63})
+
+	return &widget.ButtonImage{
+		Idle:    idle,
+		Hover:   hover,
+		Pressed: pressed,
+	}, nil
+
+	*/
+
+	idle := image.NewNineSliceColor(color.RGBA{R: 170, G: 170, B: 180, A: 255})
+	hover := image.NewNineSliceColor(color.RGBA{R: 130, G: 130, B: 150, A: 255})
+	pressed := image.NewNineSliceColor(color.RGBA{R: 100, G: 100, B: 120, A: 255})
 
 	return &widget.ButtonImage{
 		Idle:    idle,
