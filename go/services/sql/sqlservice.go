@@ -18,12 +18,37 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 	if err != nil {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
-	defer stmt.Close()
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+
+		}
+	}(stmt)
 	// Execute the query
 	err = stmt.QueryRow().Scan(&player.Id, &player.Name)
 	if err != nil {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
+
+	stmt, err = s.DB.Prepare("SELECT " +
+		"SUM(hp), " +
+		"SUM(attack), " +
+		"SUM(defense), " +
+		"SUM(speed), " +
+		"SUM(crit), " +
+		"SUM(dodge), " +
+		"SUM(block) " +
+		"FROM player_gear WHERE player_id = 1")
+
+	if err != nil {
+		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
+	}
+
+	err = stmt.QueryRow().Scan(&player.HP, &player.Attack, &player.Defense, &player.Speed, &player.Crit, &player.Dodge, &player.Block)
+	if err != nil {
+		return player, fmt.Errorf("failed to execute the query: %v", err)
+	}
+
 	return player, nil
 }
 
@@ -40,7 +65,16 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 		"dodge, " +
 		"block" +
 		")" +
-		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ")
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+		"ON DUPLICATE KEY UPDATE " +
+		"rarity_id = ?, " +
+		"hp = ?, " +
+		"attack = ?, " +
+		"defense = ?, " +
+		"speed = ?, " +
+		"crit = ?, " +
+		"dodge = ?, " +
+		"block = ? ")
 	//"ON DUPLICATE KEY UPDATE ")
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare the SQL statement: %v", err)
@@ -50,6 +84,14 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 	_, err = stmt.Exec(
 		player.Id,
 		gear.SlotId,
+		gear.Rarity,
+		gear.HP,
+		gear.Attack,
+		gear.Defense,
+		gear.Speed,
+		gear.Crit,
+		gear.Dodge,
+		gear.Level,
 		gear.Rarity,
 		gear.HP,
 		gear.Attack,

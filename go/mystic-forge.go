@@ -78,7 +78,7 @@ func main() {
 	forge := Forge{X: 200, Y: 200, Width: 200, Height: 200}
 
 	// Implement game logic here
-	fmt.Println("Welcome to the blacksmith game! Player: ", player.Name)
+	spew.Dump(player)
 
 	game := game{
 		Background: backgroundImg,
@@ -121,9 +121,6 @@ func (g *game) Update() error {
 			fmt.Println("hp:", gear.Level)
 			g.Crafted = true
 		}
-	} else if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		// Reset the "Crafted" flag when the mouse button is released
-		g.Crafted = false
 	}
 	g.ui.Update()
 
@@ -259,6 +256,8 @@ func (g *game) ShowCraftMenu() {
 		//widget.ButtonOpts.TextPadding(res.button.padding),
 		//widget.ButtonOpts.Text("Close", res.button.face, res.button.text),
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			window.Close()
+			g.Crafted = false
 			//rw()
 		}),
 	)
