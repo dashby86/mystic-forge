@@ -7,6 +7,7 @@ import (
 import "mf/models"
 
 func CraftGear() models.Gear {
+	rand.Seed(time.Now().UnixNano())
 	gear := models.Gear{
 		Level:   1,
 		HP:      determineBaseStats(20),
@@ -16,7 +17,7 @@ func CraftGear() models.Gear {
 		Crit:    rand.Intn(2) + 1,
 		Dodge:   rand.Intn(2) + 1,
 		Block:   rand.Intn(2) + 1,
-		SlotId:  rand.Intn(2) + 1,
+		SlotId:  rand.Intn(7) + 1,
 		Rarity:  rand.Intn(2) + 1,
 	}
 	return gear

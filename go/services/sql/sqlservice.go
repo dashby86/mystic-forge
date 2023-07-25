@@ -3,6 +3,7 @@ package sql
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"mf/models"
 )
 
@@ -39,14 +40,26 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 		"dodge, " +
 		"block" +
 		")" +
-		"VALUES (? ? ? ? ? ? ? ? ? ?) ")
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ")
+	//"ON DUPLICATE KEY UPDATE ")
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
 	defer stmt.Close()
 	// Execute the query
-	err = stmt.Exec(player.ID)
+	_, err = stmt.Exec(
+		player.Id,
+		gear.SlotId,
+		gear.Rarity,
+		gear.HP,
+		gear.Attack,
+		gear.Defense,
+		gear.Speed,
+		gear.Crit,
+		gear.Dodge,
+		gear.Level)
 	if err != nil {
-		return player, fmt.Errorf("failed to execute the query: %v", err)
+		log.Fatalf("Failed to query the database: %v", err)
 	}
+	return true, nil
 }

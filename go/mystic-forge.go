@@ -13,6 +13,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
+	my_image "image"
 	"image/color"
 	"log"
 	myForge "mf/forge"
@@ -83,6 +84,7 @@ func main() {
 		Background: backgroundImg,
 		Forge:      forge,
 		ui:         &ui,
+		sql:        sService,
 	}
 	// Display the stats of different equipment types
 	if err := ebiten.RunGame(&game); err != nil {
@@ -95,6 +97,7 @@ type game struct {
 	Forge      Forge
 	Crafted    bool
 	ui         *ebitenui.UI
+	sql        sqlService.SqlService
 }
 
 func (g *game) Update() error {
@@ -107,7 +110,12 @@ func (g *game) Update() error {
 			// Craft equipment
 			fmt.Println("Crafting equipment...")
 			//gear := models.Gear{}
+			player, _ := g.sql.GetPlayerByID()
 			gear := myForge.CraftGear()
+			slot, err := g.sql.SaveGearToSlot(player, gear)
+			if slot == false {
+				return err
+			}
 			spew.Dump(gear)
 			//gear := forge.CraftGear
 			fmt.Println("hp:", gear.Level)
@@ -117,7 +125,7 @@ func (g *game) Update() error {
 		// Reset the "Crafted" flag when the mouse button is released
 		g.Crafted = false
 	}
-	//g.ui.Update()
+	g.ui.Update()
 
 	return nil
 }
@@ -145,21 +153,85 @@ func (g *game) ShowCraftMenu() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	face, _ := loadFont(12)
 	buttonSlice, _ := loadButtonImage()
-	nineSlice := image.NewNineSlice(myImage, [3]int{310, 310, 310}, [3]int{270, 270, 270})
+	nineSlice := image.NewNineSlice(myImage, [3]int{290, 290, 290}, [3]int{260, 260, 260})
+	/**
 	innerContainer := widget.NewContainer(
 		widget.ContainerOpts.BackgroundImage(nineSlice),
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
 				HorizontalPosition: widget.AnchorLayoutPositionCenter,
 				VerticalPosition:   widget.AnchorLayoutPositionCenter,
-				StretchHorizontal:  true,
-				StretchVertical:    true,
+				StretchHorizontal:  false,
+				StretchVertical:    false,
 			}),
 		),
 	)
 
+	*/
+	c := widget.NewContainer(
+		widget.ContainerOpts.BackgroundImage(nineSlice),
+		widget.ContainerOpts.Layout(
+			widget.NewGridLayout(
+				widget.GridLayoutOpts.Columns(1),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true}),
+				//widget.GridLayoutOpts.Padding(15),
+				widget.GridLayoutOpts.Padding(widget.Insets{
+					Top:    40,
+					Left:   40,
+					Right:  40,
+					Bottom: 20,
+				}),
+				widget.GridLayoutOpts.Spacing(30, 150),
+			),
+		),
+	)
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text("This window blocks all input to widgets below it.", face, color.Color(color.Black)),
+	))
+	windowContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(
+			widget.RowLayoutOpts.Spacing(15),
+		)),
+	)
+	c.AddChild(windowContainer)
+	window := widget.NewWindow(
+		//Set the main contents of the window
+		widget.WindowOpts.Contents(c),
+		//Set the window above everything else and block input elsewhere
+		widget.WindowOpts.Modal(),
+		//Set how to close the window. CLICK_OUT will close the window when clicking anywhere
+		//that is not a part of the window object
+		//widget.WindowOpts.CloseMode(widget.CLICK_OUT),
+		//Indicates that the window is draggable. It must have a TitleBar for this to work
+		//widget.WindowOpts.Draggable(),
+		//Set the window resizeable
+		//widget.WindowOpts.Resizeable(),
+		//Set the minimum size the window can be
+		//widget.WindowOpts.MinSize(200, 100),
+		//Set the maximum size a window can be
+		//widget.WindowOpts.MaxSize(200, 100),
+		//Set the callback that triggers when a move is complete
+		widget.WindowOpts.MoveHandler(func(args *widget.WindowChangedEventArgs) {
+			fmt.Println("Window Moved")
+		}),
+		//Set the callback that triggers when a resize is complete
+		widget.WindowOpts.ResizeHandler(func(args *widget.WindowChangedEventArgs) {
+			fmt.Println("Window Resized")
+		}),
+	)
+	x, y := window.Contents.PreferredSize()
+	fmt.Println(x, y)
+	//Create a rect with the preferred size of the content
+	r := my_image.Rect(0, 0, 290, 260)
+	//Use the Add method to move the window to the specified point
+	r = r.Add(my_image.Point{512, 512})
+	//Set the windows location to the rect.
+	window.SetLocation(r)
+	/**
 	buttonStackedLayout := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 		// instruct the container's anchor layout to center the button both horizontally and vertically;
@@ -170,21 +242,84 @@ func (g *game) ShowCraftMenu() {
 			VerticalPosition:   widget.AnchorLayoutPositionCenter,
 		})),
 	)
+	*/
+
+	o2b := widget.NewButton(
+		widget.ButtonOpts.Image(buttonSlice),
+		//widget.ButtonOpts.TextPadding(res.button.padding),
+		//widget.ButtonOpts.Text("Open Another", res.button.face, res.button.text),
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			//openWindow2(res, ui)
+		}),
+	)
+	windowContainer.AddChild(o2b)
+
+	cb := widget.NewButton(
+		widget.ButtonOpts.Image(buttonSlice),
+		//widget.ButtonOpts.TextPadding(res.button.padding),
+		//widget.ButtonOpts.Text("Close", res.button.face, res.button.text),
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			//rw()
+		}),
+	)
+	windowContainer.AddChild(cb)
+	/**
 	button := widget.NewButton(
 		// specify the images to use
 		widget.ButtonOpts.Image(buttonSlice),
-
+		widget.ButtonOpts.WidgetOpts(
+			// instruct the container's anchor layout to center the button both horizontally and vertically
+			widget.WidgetOpts.LayoutData(widget.RowLayoutData{
+				//Specify where within the row or column this element should be positioned.
+				Position: widget.RowLayoutPositionEnd,
+				//Should this widget be stretched across the row or column
+				Stretch: false,
+				//How wide can this element grow to (override preferred widget size)
+				//MaxWidth: 100,
+				//How tall can this element grow to (override preferred widget size)
+				//MaxHeight: 100,
+			}),
+		),
 		// add a handler that reacts to clicking the button
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
 			//g.ui.Container.RemoveChildren()
+			window.Close()
 			println("button clicked")
 		}),
 	)
+	button2 := widget.NewButton(
+		// specify the images to use
+		widget.ButtonOpts.Image(buttonSlice),
+		widget.ButtonOpts.WidgetOpts(
+			// instruct the container's anchor layout to center the button both horizontally and vertically
+			widget.WidgetOpts.LayoutData(widget.RowLayoutData{
+				//Specify where within the row or column this element should be positioned.
+				Position: widget.RowLayoutPositionStart,
+				//Should this widget be stretched across the row or column
+				Stretch: false,
+				//How wide can this element grow to (override preferred widget size)
+				//MaxWidth: 100,
+				//How tall can this element grow to (override preferred widget size)
+				//MaxHeight: 100,
+			}),
+		),
+		// add a handler that reacts to clicking the button
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			//g.ui.Container.RemoveChildren()
+			window.Close()
+			println("button clicked")
+		}),
+	)
+	windowContainer.AddChild(button)
+	windowContainer.AddChild(button2)
+
+	*/
+
 	//g.ui.Container.BackgroundImage.Draw(nineSlice)
-	buttonStackedLayout.AddChild(button)
-	//buttonStackedLayout.AddChild(widget.NewGraphic(widget.GraphicOpts.Image(buttonIcon)))
-	innerContainer.AddChild(buttonStackedLayout)
-	g.ui.Container.AddChild(button)
+	//buttonStackedLayout.AddChild(button)
+	//innerContainer.AddChild(button)
+	g.ui.AddWindow(window)
+	//g.ui.Container.AddChild(window)
 }
 
 func loadFont(size float64) (font.Face, error) {
@@ -201,7 +336,6 @@ func loadFont(size float64) (font.Face, error) {
 }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
-	/**
 	buttonImage, _, err := ebitenutil.NewImageFromFile("assets/sell_menu.png")
 	if err != nil {
 		log.Fatal(err)
@@ -212,18 +346,6 @@ func loadButtonImage() (*widget.ButtonImage, error) {
 	hover := image.NewNineSlice(buttonImage, [3]int{100, 100, 100}, [3]int{63, 63, 63})
 
 	pressed := image.NewNineSlice(buttonImage, [3]int{100, 100, 100}, [3]int{63, 63, 63})
-
-	return &widget.ButtonImage{
-		Idle:    idle,
-		Hover:   hover,
-		Pressed: pressed,
-	}, nil
-
-	*/
-
-	idle := image.NewNineSliceColor(color.RGBA{R: 170, G: 170, B: 180, A: 255})
-	hover := image.NewNineSliceColor(color.RGBA{R: 130, G: 130, B: 150, A: 255})
-	pressed := image.NewNineSliceColor(color.RGBA{R: 100, G: 100, B: 120, A: 255})
 
 	return &widget.ButtonImage{
 		Idle:    idle,
