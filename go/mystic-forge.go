@@ -87,6 +87,7 @@ func main() {
 		Forge:      forge,
 		ui:         &ui,
 		sql:        sService,
+		player:     player,
 	}
 	// Display the stats of different equipment types
 	if err := ebiten.RunGame(&game); err != nil {
@@ -100,6 +101,7 @@ type game struct {
 	Crafted    bool
 	ui         *ebitenui.UI
 	sql        sqlService.SqlService
+	player     models.Player
 }
 
 func (g *game) Update() error {
@@ -112,7 +114,7 @@ func (g *game) Update() error {
 			// Craft equipment
 			fmt.Println("Crafting equipment...")
 			//gear := models.Gear{}
-			player, _ := g.sql.GetPlayerByID()
+			g.player, _ = g.sql.GetPlayerByID()
 			gear := myForge.CraftGear()
 			enemy := models.Enemy{
 				Name:    "Goblin",
@@ -125,11 +127,11 @@ func (g *game) Update() error {
 				Block:   1,
 			}
 			battler := battle.Battle{
-				Player: player,
+				Player: g.player,
 				Enemey: enemy,
 			}
 			battler.SimBattle()
-			slot, err := g.sql.SaveGearToSlot(player, gear)
+			slot, err := g.sql.SaveGearToSlot(g.player, gear)
 			if slot == false {
 				return err
 			}
@@ -139,6 +141,7 @@ func (g *game) Update() error {
 			g.Crafted = true
 		}
 	}
+	g.charWindow()
 	g.ui.Update()
 
 	return nil
@@ -376,4 +379,62 @@ func loadButtonIcon() *ebiten.Image {
 	icon := ebiten.NewImage(32, 32)
 	ebitenutil.DrawCircle(icon, 16, 16, 16, color.RGBA{R: 0x71, G: 0x56, B: 0xbd, A: 255})
 	return icon
+}
+
+func (g *game) charWindow() {
+	myImage, _, err := ebitenutil.NewImageFromFile("assets/char_menu.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	nineSlice := image.NewNineSlice(myImage, [3]int{372, 372, 372}, [3]int{323, 323, 323})
+	c := widget.NewContainer(
+		widget.ContainerOpts.BackgroundImage(nineSlice),
+		widget.ContainerOpts.Layout(
+			widget.NewGridLayout(
+				widget.GridLayoutOpts.Columns(1),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true}),
+				//widget.GridLayoutOpts.Padding(15),
+				widget.GridLayoutOpts.Padding(widget.Insets{
+					Top:    40,
+					Left:   40,
+					Right:  40,
+					Bottom: 20,
+				}),
+				widget.GridLayoutOpts.Spacing(30, 150),
+			),
+		),
+	)
+	face, _ := loadFont(12)
+	hp := fmt.Sprintf("HP: %s", g.player.HP)
+	//hp := "HP: " + strconv.FormatInt(g.player.HP)
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(hp, face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+
+	window := widget.NewWindow(
+		//Set the main contents of the window
+		widget.WindowOpts.Contents(c),
+		//Set the window above everything else and block input elsewhere
+		//widget.WindowOpts.Modal(),
+		//Set how to close the window. CLICK_OUT will close the window when clicking anywhere
+		//that is not a part of the window object
+		//widget.WindowOpts.CloseMode(widget.CLICK_OUT),
+		//Indicates that the window is draggable. It must have a TitleBar for this to work
+		//widget.WindowOpts.Draggable(),
+		//Set the window resizeable
+		//widget.WindowOpts.Resizeable(),
+		//Set the minimum size the window can be
+		//widget.WindowOpts.MinSize(200, 100),
+		//Set the maximum size a window can be
+		//widget.WindowOpts.MaxSize(200, 100),
+		//Set the callback that triggers when a move is complete
+	)
+	//Create a rect with the preferred size of the content
+	r := my_image.Rect(0, 0, 370, 320)
+	//Use the Add method to move the window to the specified point
+	r = r.Add(my_image.Point{655, 15})
+	//Set the windows location to the rect.
+	window.SetLocation(r)
+	g.ui.AddWindow(window)
 }
