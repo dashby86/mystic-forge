@@ -16,7 +16,9 @@ import (
 	my_image "image"
 	"image/color"
 	"log"
+	"mf/battle"
 	myForge "mf/forge"
+	"mf/models"
 	sqlService "mf/services/sql"
 )
 
@@ -112,6 +114,21 @@ func (g *game) Update() error {
 			//gear := models.Gear{}
 			player, _ := g.sql.GetPlayerByID()
 			gear := myForge.CraftGear()
+			enemy := models.Enemy{
+				Name:    "Goblin",
+				HP:      4416,
+				Attack:  1178,
+				Defense: 560,
+				Speed:   281,
+				Crit:    1,
+				Dodge:   1,
+				Block:   1,
+			}
+			battler := battle.Battle{
+				Player: player,
+				Enemey: enemy,
+			}
+			battler.SimBattle()
 			slot, err := g.sql.SaveGearToSlot(player, gear)
 			if slot == false {
 				return err
