@@ -2,11 +2,17 @@ package forge
 
 import (
 	"math/rand"
+	"mf/models"
+	sqlService "mf/services/sql"
 	"time"
 )
-import "mf/models"
 
-func CraftGear() models.Gear {
+type Forge struct {
+	Sql    sqlService.SqlService
+	Player models.Player
+}
+
+func (f Forge) CraftGear() models.Gear {
 	rand.Seed(time.Now().UnixNano())
 	gear := models.Gear{
 		Level:   1,
@@ -17,7 +23,7 @@ func CraftGear() models.Gear {
 		Crit:    rand.Intn(2) + 1,
 		Dodge:   rand.Intn(2) + 1,
 		Block:   rand.Intn(2) + 1,
-		SlotId:  rand.Intn(7) + 1,
+		SlotId:  rand.Intn(9) + 1,
 		Rarity:  rand.Intn(2) + 1,
 	}
 	return gear
@@ -30,4 +36,11 @@ func determineBaseStats(baseStat int) int {
 	max := level * 6 * baseStat
 	return (rand.Intn(max-min+1) + min)
 	//return baseStat + (level *)
+}
+
+func (f Forge) EquipGear(gear models.Gear) {
+	_, err := f.Sql.SaveGearToSlot(f.Player, gear)
+	if err != nil {
+		return
+	}
 }

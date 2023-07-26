@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"mf/models"
+	"time"
 )
 
 type Battle struct {
@@ -13,33 +14,46 @@ type Battle struct {
 
 func (battle Battle) SimBattle() {
 	// Initialize the turn variable.
-	turn := 1
+	//turn := 1
+	enemyHp := battle.Enemey.HP
+	playerHp := battle.Player.HP
+
+	fmt.Printf("Starting battle! Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
 
 	// Simulate the battle.
 	for {
 		// Check which entity gets to attack first.
 		if battle.Player.Speed > battle.Enemey.Speed {
-			playerAttacks(battle.Player, battle.Enemey)
+			playerAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+			if enemyHp > 0 {
+				enemyAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+			}
 		} else {
-			enemyAttacks(battle.Player, battle.Enemey)
+			enemyAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+			if playerHp > 0 {
+				playerAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+			}
 		}
 
 		// Check if the battle is over.
-		if battle.Player.HP <= 0 {
+		if playerHp <= 0 {
 			fmt.Println("The player has died.")
 			break
 		}
-		if battle.Enemey.HP <= 0 {
+		if enemyHp <= 0 {
 			fmt.Println("The enemy has died.")
 			break
 		}
 
+		fmt.Printf("Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
+
+		time.Sleep(2 * time.Second)
 		// Switch turns.
-		turn = 3 - turn
+		//turn = 3 - turn
 	}
 }
 
-func playerAttacks(player models.Player, enemy models.Enemy) {
+func playerAttacks(player models.Player, enemy models.Enemy, playerHp *int, enemyHp *int) {
 	// Calculate the player's damage.
 	damage := player.Attack - enemy.Defense
 	if rand.Intn(100) < player.Crit {
@@ -47,19 +61,27 @@ func playerAttacks(player models.Player, enemy models.Enemy) {
 		damage *= 2
 	}
 
-	// Apply the damage to the enemy.
-	fmt.Printf("Attacking for %s damage.\n", damage)
-	enemy.HP -= damage
+	if rand.Intn(100) < enemy.Dodge {
+		fmt.Println("Enemy Dodged!")
+	} else {
+		// Apply the damage to the enemy.
+		fmt.Printf("Attacking %s for %d damage.\n", enemy.Name, damage)
+		*enemyHp -= damage
+	}
 }
 
-func enemyAttacks(player models.Player, enemy models.Enemy) {
+func enemyAttacks(player models.Player, enemy models.Enemy, playerHp *int, enemyHp *int) {
 	// Calculate the enemy's damage.
 	damage := enemy.Attack - player.Defense
 	if rand.Intn(100) < enemy.Crit {
 		damage *= 2
 	}
 
-	// Apply the damage to the player.
-	fmt.Printf("Attacking for %s damage.\n", damage)
-	player.HP -= damage
+	if rand.Intn(100) < player.Dodge {
+		fmt.Println("Player Dodged!")
+	} else {
+		// Apply the damage to the player.
+		fmt.Printf("Attacking %s for %d damage.\n", player.Name, damage)
+		*playerHp -= damage
+	}
 }

@@ -16,13 +16,12 @@ import (
 	my_image "image"
 	"image/color"
 	"log"
-	"mf/battle"
-	myForge "mf/forge"
+	"mf/forge"
 	"mf/models"
 	sqlService "mf/services/sql"
 )
 
-type Forge struct {
+type Anvil struct {
 	X, Y, Width, Height int
 }
 
@@ -77,17 +76,23 @@ func main() {
 	backgroundImg, _, _ := ebitenutil.NewImageFromFile("assets/forge-main.png")
 
 	// Define the forge
-	forge := Forge{X: 200, Y: 200, Width: 200, Height: 200}
+	anvil := Anvil{X: 200, Y: 200, Width: 200, Height: 200}
 
 	// Implement game logic here
 	spew.Dump(player)
 
+	Forge := forge.Forge{
+		Sql:    sService,
+		Player: player,
+	}
+
 	game := game{
 		Background: backgroundImg,
-		Forge:      forge,
+		Anvil:      anvil,
 		ui:         &ui,
 		sql:        sService,
 		player:     player,
+		Forge:      Forge,
 	}
 	// Display the stats of different equipment types
 	if err := ebiten.RunGame(&game); err != nil {
@@ -96,48 +101,50 @@ func main() {
 }
 
 type game struct {
-	Background *ebiten.Image
-	Forge      Forge
-	Crafted    bool
-	ui         *ebitenui.UI
-	sql        sqlService.SqlService
-	player     models.Player
+	Background  *ebiten.Image
+	Anvil       Anvil
+	Crafted     bool
+	ui          *ebitenui.UI
+	sql         sqlService.SqlService
+	player      models.Player
+	craftedGear models.Gear
+	Forge       forge.Forge
 }
 
 func (g *game) Update() error {
 	// Check if the forge has been clicked and if a craft has not already been triggered
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !g.Crafted {
 		x, y := ebiten.CursorPosition()
-		forge := g.Forge
+		forge := g.Anvil
 		if x >= forge.X && x <= forge.X+forge.Width && y >= forge.Y && y <= forge.Y+forge.Height {
 			g.ShowCraftMenu()
 			// Craft equipment
 			fmt.Println("Crafting equipment...")
 			//gear := models.Gear{}
 			g.player, _ = g.sql.GetPlayerByID()
-			gear := myForge.CraftGear()
+			gear := g.Forge.CraftGear()
+			g.craftedGear = gear
+			/**
 			enemy := models.Enemy{
 				Name:    "Goblin",
-				HP:      4416,
-				Attack:  1178,
+				HP:      40416,
+				Attack:  6178,
 				Defense: 560,
 				Speed:   281,
-				Crit:    1,
-				Dodge:   1,
+				Crit:    20,
+				Dodge:   50,
 				Block:   1,
 			}
+
 			battler := battle.Battle{
 				Player: g.player,
 				Enemey: enemy,
 			}
 			battler.SimBattle()
-			slot, err := g.sql.SaveGearToSlot(g.player, gear)
-			if slot == false {
-				return err
-			}
+
+			*/
+
 			spew.Dump(gear)
-			//gear := forge.CraftGear
-			fmt.Println("hp:", gear.Level)
 			g.Crafted = true
 		}
 	}
@@ -152,7 +159,7 @@ func (g *game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.Background, nil)
 
 	// Draw the forge
-	forge := g.Forge
+	forge := g.Anvil
 	ebitenutil.DrawRect(screen, float64(forge.X), float64(forge.Y), float64(forge.Width), float64(forge.Height), color.NRGBA{0, 0, 0, 255})
 	g.ui.Draw(screen)
 	//g.ui.
@@ -172,7 +179,7 @@ func (g *game) ShowCraftMenu() {
 	}
 	face, _ := loadFont(12)
 	buttonSlice, _ := loadButtonImage()
-	nineSlice := image.NewNineSlice(myImage, [3]int{290, 290, 290}, [3]int{260, 260, 260})
+	nineSlice := image.NewNineSlice(myImage, [3]int{1020, 1020, 1020}, [3]int{555, 555, 555})
 	/**
 	innerContainer := widget.NewContainer(
 		widget.ContainerOpts.BackgroundImage(nineSlice),
@@ -191,6 +198,7 @@ func (g *game) ShowCraftMenu() {
 	*/
 	c := widget.NewContainer(
 		widget.ContainerOpts.BackgroundImage(nineSlice),
+		//widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 		widget.ContainerOpts.Layout(
 			widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
@@ -243,9 +251,9 @@ func (g *game) ShowCraftMenu() {
 	x, y := window.Contents.PreferredSize()
 	fmt.Println(x, y)
 	//Create a rect with the preferred size of the content
-	r := my_image.Rect(0, 0, 290, 260)
+	r := my_image.Rect(0, 0, 1020, 555)
 	//Use the Add method to move the window to the specified point
-	r = r.Add(my_image.Point{512, 512})
+	r = r.Add(my_image.Point{0, 400})
 	//Set the windows location to the rect.
 	window.SetLocation(r)
 	/**
@@ -266,7 +274,10 @@ func (g *game) ShowCraftMenu() {
 		//widget.ButtonOpts.TextPadding(res.button.padding),
 		//widget.ButtonOpts.Text("Open Another", res.button.face, res.button.text),
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-			//openWindow2(res, ui)
+			g.Forge.EquipGear(g.craftedGear)
+			g.player, _ = g.sql.GetPlayerByID()
+			window.Close()
+			g.Crafted = false
 		}),
 	)
 	windowContainer.AddChild(o2b)
@@ -278,7 +289,6 @@ func (g *game) ShowCraftMenu() {
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
 			window.Close()
 			g.Crafted = false
-			//rw()
 		}),
 	)
 	windowContainer.AddChild(cb)
@@ -392,23 +402,45 @@ func (g *game) charWindow() {
 		widget.ContainerOpts.Layout(
 			widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
-				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true}),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true}),
 				//widget.GridLayoutOpts.Padding(15),
 				widget.GridLayoutOpts.Padding(widget.Insets{
-					Top:    40,
-					Left:   40,
+					Top:    80,
+					Left:   80,
 					Right:  40,
-					Bottom: 20,
+					Bottom: 80,
 				}),
-				widget.GridLayoutOpts.Spacing(30, 150),
+				widget.GridLayoutOpts.Spacing(30, 20),
 			),
 		),
 	)
 	face, _ := loadFont(12)
-	hp := fmt.Sprintf("HP: %s", g.player.HP)
-	//hp := "HP: " + strconv.FormatInt(g.player.HP)
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(hp, face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("HP: %d", g.player.HP), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Attack: %d", g.player.Attack), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Defense: %d", g.player.Defense), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Speed: %d", g.player.Speed), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", g.player.Crit), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", g.player.Dodge), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", g.player.Block), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
