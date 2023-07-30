@@ -12,6 +12,7 @@ type SqlService struct {
 }
 
 func (s SqlService) GetPlayerByID() (models.Player, error) {
+	fmt.Println("Querying...")
 	player := models.Player{}
 	// Prepare the SQL statement
 	stmt, err := s.DB.Prepare("SELECT id, name FROM player WHERE id = 1")
@@ -49,6 +50,11 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
 
+	stmt, err = s.DB.Prepare("SELECT quanity FROM ore_inventory where player_id = 1")
+	err = stmt.QueryRow().Scan(&player.Ore)
+	if err != nil {
+		return player, fmt.Errorf("failed to execute the query: %v", err)
+	}
 	return player, nil
 }
 
@@ -104,4 +110,44 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 		log.Fatalf("Failed to query the database: %v", err)
 	}
 	return true, nil
+}
+
+func (s SqlService) SpendOre(playerId int) (bool, error) {
+	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quanity = quanity - 1 where player_id = ?")
+	_, err = stmt.Exec(playerId)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute the query: %v", err)
+	}
+	return true, nil
+}
+
+func (s SqlService) GrantOre(playerId int, amount int) (bool, error) {
+	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quanity = quanity + ? where player_id = ?")
+	_, err = stmt.Exec(amount, playerId)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute the query: %v", err)
+	}
+	return true, nil
+}
+
+func (s SqlService) GetEquipedGearBySlot(playerId int, slotId int) (models.Gear, error) {
+	gear := models.Gear{}
+	stmt, err := s.DB.Prepare("SELECT " +
+		"hp, " +
+		"attack, " +
+		"defense, " +
+		"speed, " +
+		"crit, " +
+		"dodge, " +
+		"block " +
+		"FROM player_gear WHERE player_id = ? AND gear_slot_id = ?")
+
+	if err != nil {
+		return gear, fmt.Errorf("failed to prepare the SQL statement: %v", err)
+	}
+	err = stmt.QueryRow(playerId, slotId).Scan(&gear.HP, &gear.Attack, &gear.Defense, &gear.Speed, &gear.Crit, &gear.Dodge, &gear.Block)
+	if err != nil {
+		return gear, fmt.Errorf("failed to execute the query: %v", err)
+	}
+	return gear, nil
 }

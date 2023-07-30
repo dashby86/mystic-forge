@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"math/rand"
 	"mf/models"
+	sqlService "mf/services/sql"
 	"time"
 )
 
 type Battle struct {
 	Player models.Player
 	Enemey models.Enemy
+	Sql    sqlService.SqlService
 }
 
 func (battle Battle) SimBattle() {
@@ -42,14 +44,13 @@ func (battle Battle) SimBattle() {
 		}
 		if enemyHp <= 0 {
 			fmt.Println("The enemy has died.")
+
 			break
 		}
 
 		fmt.Printf("Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
 
 		time.Sleep(2 * time.Second)
-		// Switch turns.
-		//turn = 3 - turn
 	}
 }
 

@@ -10,4 +10,5 @@ type Player struct {
 	Crit    int
 	Dodge   int
 	Block   int
+	Ore     int
 }

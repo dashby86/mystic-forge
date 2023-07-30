@@ -23,7 +23,7 @@ func (f Forge) CraftGear() models.Gear {
 		Crit:    rand.Intn(2) + 1,
 		Dodge:   rand.Intn(2) + 1,
 		Block:   rand.Intn(2) + 1,
-		SlotId:  rand.Intn(9) + 1,
+		SlotId:  rand.Intn(8) + 1,
 		Rarity:  rand.Intn(2) + 1,
 	}
 	return gear
