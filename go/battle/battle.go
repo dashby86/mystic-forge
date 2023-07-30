@@ -71,7 +71,7 @@ func (battle Battle) playerAttacks() {
 		damage *= 2
 	}
 
-	if rand.Intn(100) < battle.Enemy.Defense {
+	if rand.Intn(100) < battle.Enemy.Dodge {
 		fmt.Println("Enemy Dodged!")
 	} else {
 		// Apply the damage to the enemy.
