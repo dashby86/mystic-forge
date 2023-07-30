@@ -14,77 +14,84 @@ type Battle struct {
 	Sql    sqlService.SqlService
 }
 
-func (battle Battle) SimBattle() {
-	// Initialize the turn variable.
-	//turn := 1
-	enemyHp := battle.Enemy.HP
-	playerHp := battle.Player.HP
+func (battle *Battle) SimBattle() {
+	// Initialize entities and attack intervals.
+	enemyHp := battle.Enemy.MaxHP
+	playerHp := battle.Player.MaxHP
+	playerAttackInterval := 1.0 / battle.Player.Speed
+	enemyAttackInterval := 1.0 / battle.Enemy.Speed
 
-	fmt.Printf("Starting battle! Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
+	fmt.Printf("Starting battle! Player life: %d -- Enemy life: %d\n", playerHp, enemyHp)
 
-	// Simulate the battle.
+	startTime := time.Now()
+
 	for {
-		// Check which entity gets to attack first.
-		if battle.Player.Speed > battle.Enemy.Speed {
-			playerAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
-			if enemyHp > 0 {
-				enemyAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
+		elapsedTime := time.Since(startTime).Seconds()
+
+		// Check if the player can attack.
+		if elapsedTime >= playerAttackInterval {
+			battle.playerAttacks()
+			fmt.Printf("Player attacks! Enemy life: %d\n", battle.Enemy.CurrentHP)
+
+			// Check if the enemy has been defeated.
+			if battle.Enemy.CurrentHP <= 0 {
+				fmt.Println("The enemy has died.")
+				break
 			}
-		} else {
-			enemyAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
-			if playerHp > 0 {
-				playerAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
+
+			// Update the last attack time for the player.
+			startTime = time.Now()
+		}
+
+		// Check if the enemy can attack.
+		if elapsedTime >= enemyAttackInterval {
+			battle.enemyAttacks()
+			fmt.Printf("Enemy attacks! Player life: %d\n", battle.Player.CurrentHP)
+
+			// Check if the player has been defeated.
+			if battle.Player.CurrentHP <= 0 {
+				fmt.Println("The player has died.")
+				break
 			}
+
+			// Update the last attack time for the enemy.
+			startTime = time.Now()
 		}
 
-		// Check if the battle is over.
-		if playerHp <= 0 {
-			fmt.Println("The player has died.")
-			break
-		}
-		if enemyHp <= 0 {
-			fmt.Println("The enemy has died.")
-
-			break
-		}
-
-		fmt.Printf("Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
-
-		time.Sleep(2 * time.Second)
+		// Sleep briefly to avoid busy waiting and reduce resource usage.
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
-func playerAttacks(player models.Player, enemy models.Enemy, playerHp *int, enemyHp *int) {
+func (battle Battle) playerAttacks() {
 	// Calculate the player's damage.
-	damage := player.Attack - enemy.Defense
-	if rand.Intn(100) < player.Crit {
+	damage := battle.Player.Attack - battle.Enemy.Defense
+	if rand.Intn(100) < battle.Player.Crit {
 		fmt.Println("Critical Strike!")
 		damage *= 2
 	}
 
-	if rand.Intn(100) < enemy.Dodge {
+	if rand.Intn(100) < battle.Enemy.Defense {
 		fmt.Println("Enemy Dodged!")
 	} else {
-		// TODO: Account for enemy armor/defense
-		// TODO: magic vs. physical damage?
 		// Apply the damage to the enemy.
-		fmt.Printf("Attacking %s for %d damage.\n", enemy.Name, damage)
-		*enemyHp -= damage
+		fmt.Printf("Attacking %s for %d damage.\n", battle.Enemy.Name, damage)
+		battle.Enemy.CurrentHP -= damage
 	}
 }
 
-func enemyAttacks(player models.Player, enemy models.Enemy, playerHp *int, enemyHp *int) {
+func (battle Battle) enemyAttacks() {
 	// Calculate the enemy's damage.
-	damage := enemy.Attack - player.Defense
-	if rand.Intn(100) < enemy.Crit {
+	damage := battle.Enemy.Attack - battle.Player.Defense
+	if rand.Intn(100) < battle.Enemy.Crit {
 		damage *= 2
 	}
 
-	if rand.Intn(100) < player.Dodge {
+	if rand.Intn(100) < battle.Player.Dodge {
 		fmt.Println("Player Dodged!")
 	} else {
 		// Apply the damage to the player.
-		fmt.Printf("Attacking %s for %d damage.\n", player.Name, damage)
-		*playerHp -= damage
+		fmt.Printf("Attacking %s for %d damage.\n", battle.Player.Name, damage)
+		battle.Player.CurrentHP -= damage
 	}
 }

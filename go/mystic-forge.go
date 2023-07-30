@@ -3,6 +3,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	my_image "image"
+	"image/color"
+	"log"
+	"mf/battle"
+	"mf/forge"
+	"mf/models"
+	sqlService "mf/services/sql"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/image"
@@ -13,13 +21,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
-	my_image "image"
-	"image/color"
-	"log"
-	"mf/battle"
-	"mf/forge"
-	"mf/models"
-	sqlService "mf/services/sql"
 )
 
 type Anvil struct {
@@ -187,7 +188,7 @@ func (g *game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Speed: %d", gear.Speed), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %d", gear.Speed), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
@@ -233,7 +234,7 @@ func (g *game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Speed: %d", crafted.Speed), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %d", crafted.Speed), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
@@ -370,7 +371,7 @@ func (g *game) charWindow() {
 	)
 	face, _ := loadFont(12)
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("HP: %d", g.player.HP), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("HP: %d/%d", g.player.CurrentHP, g.player.MaxHP), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
@@ -382,7 +383,7 @@ func (g *game) charWindow() {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Speed: %d", g.player.Speed), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %f", g.player.Speed), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
@@ -529,19 +530,20 @@ func (g *game) anvil() {
 
 func (g *game) Battle() {
 	enemy := models.Enemy{
-		Name:    "Goblin",
-		HP:      40416,
-		Attack:  6178,
-		Defense: 560,
-		Speed:   281,
-		Crit:    20,
-		Dodge:   50,
-		Block:   1,
+		Name:      "Goblin",
+		MaxHP:     40416,
+		CurrentHP: 40416,
+		Attack:    6178,
+		Defense:   560,
+		Speed:     281,
+		Crit:      20,
+		Dodge:     50,
+		Block:     1,
 	}
 
 	battler := battle.Battle{
 		Player: g.player,
-		Enemey: enemy,
+		Enemy:  enemy,
 		Sql:    g.sql,
 	}
 	battler.SimBattle()
@@ -549,7 +551,7 @@ func (g *game) Battle() {
 
 func (g *game) forge() {
 	g.ui.Container.Children()
-	if g.Crafted == false && g.player.Ore > 0 {
+	if !g.Crafted && g.player.Ore > 0 {
 		// Craft equipment
 		fmt.Println("Crafting equipment...")
 		//gear := models.Gear{}
@@ -569,6 +571,6 @@ func (g *game) forge() {
 	}
 }
 
-func gearTextTemplate() {
+// func gearTextTemplate() {
 
-}
+// }

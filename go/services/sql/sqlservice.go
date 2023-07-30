@@ -45,7 +45,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
 
-	err = stmt.QueryRow().Scan(&player.HP, &player.Attack, &player.Defense, &player.Speed, &player.Crit, &player.Dodge, &player.Block)
+	err = stmt.QueryRow().Scan(&player.MaxHP, &player.Attack, &player.Defense, &player.Speed, &player.Crit, &player.Dodge, &player.Block)
 	if err != nil {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
