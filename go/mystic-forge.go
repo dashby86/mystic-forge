@@ -558,7 +558,7 @@ func (g *game) forge() {
 		g.player, _ = g.sql.GetPlayerByID()
 		gear := g.Forge.CraftGear()
 		_, _ = g.sql.SpendOre(1)
-		current, err := g.sql.GetEquipedGearBySlot(1, gear.SlotId)
+		current, err := g.sql.GetEquippedGearBySlot(1, gear.SlotId)
 		if err != nil {
 			log.Fatal(err)
 		}

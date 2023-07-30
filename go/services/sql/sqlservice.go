@@ -20,10 +20,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
 	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-
-		}
+		_ = stmt.Close()
 	}(stmt)
 	// Execute the query
 	err = stmt.QueryRow().Scan(&player.Id, &player.Name)
@@ -47,13 +44,16 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 
 	err = stmt.QueryRow().Scan(&player.MaxHP, &player.Attack, &player.Defense, &player.Speed, &player.Crit, &player.Dodge, &player.Block)
 	if err != nil {
-		return player, fmt.Errorf("failed to execute the query: %v", err)
+		return player, fmt.Errorf("failed to execute query: %v", err)
 	}
 
-	stmt, err = s.DB.Prepare("SELECT quanity FROM ore_inventory where player_id = 1")
+	stmt, err = s.DB.Prepare("SELECT quantity FROM ore_inventory where player_id = 1")
+	if err != nil {
+		return player, fmt.Errorf("failed to prepare query: %v", err)
+	}
 	err = stmt.QueryRow().Scan(&player.Ore)
 	if err != nil {
-		return player, fmt.Errorf("failed to execute the query: %v", err)
+		return player, fmt.Errorf("failed to execute query: %v", err)
 	}
 	return player, nil
 }
@@ -113,24 +113,30 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 }
 
 func (s SqlService) SpendOre(playerId int) (bool, error) {
-	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quanity = quanity - 1 where player_id = ?")
+	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quantity = quantity - 1 where player_id = ?")
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare query: %v", err)
+	}
 	_, err = stmt.Exec(playerId)
 	if err != nil {
-		return false, fmt.Errorf("failed to execute the query: %v", err)
+		return false, fmt.Errorf("failed to execute query: %v", err)
 	}
 	return true, nil
 }
 
 func (s SqlService) GrantOre(playerId int, amount int) (bool, error) {
-	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quanity = quanity + ? where player_id = ?")
+	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quantity = quantity + ? where player_id = ?")
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare query: %v", err)
+	}
 	_, err = stmt.Exec(amount, playerId)
 	if err != nil {
-		return false, fmt.Errorf("failed to execute the query: %v", err)
+		return false, fmt.Errorf("failed to execute query: %v", err)
 	}
 	return true, nil
 }
 
-func (s SqlService) GetEquipedGearBySlot(playerId int, slotId int) (models.Gear, error) {
+func (s SqlService) GetEquippedGearBySlot(playerId int, slotId int) (models.Gear, error) {
 	gear := models.Gear{}
 	stmt, err := s.DB.Prepare("SELECT " +
 		"hp, " +
