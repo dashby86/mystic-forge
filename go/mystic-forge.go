@@ -19,6 +19,7 @@ import (
 	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
 )
@@ -342,7 +343,7 @@ func loadButtonIcon() *ebiten.Image {
 	// we'll use a circle as an icon image
 	// in reality it could be an arbitrary *ebiten.Image
 	icon := ebiten.NewImage(32, 32)
-	ebitenutil.DrawCircle(icon, 16, 16, 16, color.RGBA{R: 0x71, G: 0x56, B: 0xbd, A: 255})
+	vector.DrawFilledCircle(icon, 16.0, 16.0, 16.0, color.RGBA{R: 0x71, G: 0x56, B: 0xbd, A: 255}, false)
 	return icon
 }
 
