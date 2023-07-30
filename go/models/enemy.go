@@ -7,7 +7,7 @@ type Enemy struct {
 	Attack    int
 	Defense   int
 	Speed     float64
-	Crit      int
-	Dodge     int
-	Block     int
+	Crit      float64
+	Dodge     float64
+	Block     float64
 }

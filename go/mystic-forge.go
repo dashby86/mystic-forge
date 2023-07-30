@@ -388,15 +388,15 @@ func (g *game) charWindow() {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", g.player.Crit), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%f", g.player.Crit), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", g.player.Dodge), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%f", g.player.Dodge), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", g.player.Block), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Block: %%%f", g.player.Block), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
