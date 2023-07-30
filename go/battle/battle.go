@@ -10,14 +10,14 @@ import (
 
 type Battle struct {
 	Player models.Player
-	Enemey models.Enemy
+	Enemy  models.Enemy
 	Sql    sqlService.SqlService
 }
 
 func (battle Battle) SimBattle() {
 	// Initialize the turn variable.
 	//turn := 1
-	enemyHp := battle.Enemey.HP
+	enemyHp := battle.Enemy.HP
 	playerHp := battle.Player.HP
 
 	fmt.Printf("Starting battle! Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
@@ -25,15 +25,15 @@ func (battle Battle) SimBattle() {
 	// Simulate the battle.
 	for {
 		// Check which entity gets to attack first.
-		if battle.Player.Speed > battle.Enemey.Speed {
-			playerAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+		if battle.Player.Speed > battle.Enemy.Speed {
+			playerAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			if enemyHp > 0 {
-				enemyAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+				enemyAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			}
 		} else {
-			enemyAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+			enemyAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			if playerHp > 0 {
-				playerAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+				playerAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			}
 		}
 
@@ -65,6 +65,8 @@ func playerAttacks(player models.Player, enemy models.Enemy, playerHp *int, enem
 	if rand.Intn(100) < enemy.Dodge {
 		fmt.Println("Enemy Dodged!")
 	} else {
+		// TODO: Account for enemy armor/defense
+		// TODO: magic vs. physical damage?
 		// Apply the damage to the enemy.
 		fmt.Printf("Attacking %s for %d damage.\n", enemy.Name, damage)
 		*enemyHp -= damage
