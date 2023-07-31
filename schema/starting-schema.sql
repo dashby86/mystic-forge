@@ -26,11 +26,11 @@ CREATE TABLE IF NOT EXISTS `player_gear` (
     `hp` int(11) unsigned NOT NULL DEFAULT 0,
     `attack` int(11) unsigned NOT NULL DEFAULT 0,
     `defense` int(11) unsigned NOT NULL DEFAULT 0,
-    `speed` int(11) unsigned NOT NULL DEFAULT 0,
-    `crit` smallint(4) unsigned NOT NULL DEFAULT 0,
-    `dodge` smallint(4) unsigned NOT NULL DEFAULT 0,
-    `block` smallint(4) unsigned NOT NULL DEFAULT 0,
-    CONSTRAINT UC_player_slot UNIQUE (player_id, gear_slot_id)
+    `speed` decimal(5, 2) DEFAULT 0.00,
+    `crit` decimal(5, 2) DEFAULT 0.00,
+    `dodge` decimal(5, 2) DEFAULT 0.00,
+    `block` decimal(5, 2) DEFAULT 0.00,
+    CONSTRAINT UC_player_slot UNIQUE (player_id, gear_slot_id).
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Helmet');

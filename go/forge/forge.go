@@ -14,19 +14,18 @@ type Forge struct {
 
 func (f Forge) CraftGear() models.Gear {
 	rand.Seed(time.Now().UnixNano())
-	gear := models.Gear{
+	return models.Gear{
 		Level:   1,
 		HP:      determineBaseStats(20),
 		Attack:  determineBaseStats(4),
 		Defense: determineBaseStats(2),
-		Speed:   determineBaseStats(1),
-		Crit:    rand.Intn(2) + 1,
-		Dodge:   rand.Intn(2) + 1,
-		Block:   rand.Intn(2) + 1,
+		Speed:   rand.Float64() + 1,
+		Crit:    rand.Float64() + 1,
+		Dodge:   rand.Float64() + 1,
+		Block:   rand.Float64() + 1,
 		SlotId:  rand.Intn(8) + 1,
 		Rarity:  rand.Intn(2) + 1,
 	}
-	return gear
 }
 
 func determineBaseStats(baseStat int) int {
