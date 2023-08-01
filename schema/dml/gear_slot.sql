@@ -1,0 +1,9 @@
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Helmet');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Pauldrons');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Gloves');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Boots');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Greaves');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Ring');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Necklace');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Weapon');
+INSERT IGNORE INTO `app`.`gear_slot` (`name`) VALUES ('Chest');
