@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"log"
 	"mf/battle"
+	"mf/events"
 	"mf/forge"
 	"mf/models"
 	sqlService "mf/services/sql"
@@ -86,16 +87,22 @@ func main() {
 		Player: player,
 	}
 
+	// Create an events queue
+	eventQueue := &events.EventQueue{}
+
 	game := game{
 		Background: backgroundImg,
 		ui:         &ui,
 		sql:        sService,
 		player:     player,
 		Forge:      Forge,
+		Events:     eventQueue,
 	}
 	game.charWindow()
 	game.anvil()
 	game.battleButton()
+	go game.Events.EventDispatcher()
+
 	// Display the stats of different equipment types
 	if err := ebiten.RunGame(&game); err != nil {
 		fmt.Println(err)
@@ -110,6 +117,7 @@ type game struct {
 	player      models.Player
 	craftedGear models.Gear
 	Forge       forge.Forge
+	Events      *events.EventQueue
 }
 
 func (g *game) Update() error {
@@ -189,19 +197,19 @@ func (g *game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %d", gear.Speed), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %.2f", gear.Speed), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", gear.Crit), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %.2f%%", gear.Crit), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", gear.Dodge), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %.2f%%", gear.Dodge), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", gear.Block), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Block: %.2f%%", gear.Block), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
@@ -235,19 +243,19 @@ func (g *game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %d", crafted.Speed), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Attack Speed: %.2f", crafted.Speed), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", crafted.Crit), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %.2f%%", crafted.Crit), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", crafted.Dodge), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %.2f%%", crafted.Dodge), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", crafted.Block), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Block: %.2f%%", crafted.Block), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
@@ -530,7 +538,18 @@ func (g *game) anvil() {
 }
 
 func (g *game) Battle() {
-	enemy := models.Enemy{
+
+	battler := battle.Battle{
+		Player: g.player,
+		Enemy:  generateNextEnemy(g.player),
+		Sql:    g.sql,
+	}
+	battler.SimBattle(g.Events)
+}
+
+func generateNextEnemy(player models.Player) models.Enemy {
+	//TODO: Implement next enemy logic.
+	return models.Enemy{
 		Name:      "Goblin",
 		MaxHP:     40416,
 		CurrentHP: 40416,
@@ -541,13 +560,6 @@ func (g *game) Battle() {
 		Dodge:     50,
 		Block:     1,
 	}
-
-	battler := battle.Battle{
-		Player: g.player,
-		Enemy:  enemy,
-		Sql:    g.sql,
-	}
-	battler.SimBattle()
 }
 
 func (g *game) forge() {

@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS `app`.`rarity` (
     `item_type` varchar(50) DEFAULT '' COMMENT 'Type of item associated with this rarity (e.g., weapon, armor, consumable)',
     `enchantable` tinyint(1) DEFAULT 0 COMMENT 'Whether the item can be enchanted (1 for yes, 0 for no)',
     `max_bonus_scaling` int(11) DEFAULT 0 COMMENT 'Maximum bonus scaling with the rarity tier',
-    `description` TEXT NOT NULL DEFAULT '' COMMENT 'Description of the rarity',
+    `description` TEXT NOT NULL COMMENT 'Description of the rarity',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS `app`.`player_gear` (
     `crit` decimal(5, 2) DEFAULT 0.00,
     `dodge` decimal(5, 2) DEFAULT 0.00,
     `block` decimal(5, 2) DEFAULT 0.00,
-    CONSTRAINT UC_player_slot UNIQUE (player_id, gear_slot_id).
+    CONSTRAINT UC_player_slot UNIQUE (player_id, gear_slot_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -3,6 +3,7 @@ package battle
 import (
 	"fmt"
 	"math/rand"
+	"mf/events"
 	"mf/models"
 	sqlService "mf/services/sql"
 	"time"
@@ -14,7 +15,7 @@ type Battle struct {
 	Sql    sqlService.SqlService
 }
 
-func (battle *Battle) SimBattle() {
+func (battle *Battle) SimBattle(eventQueue *events.EventQueue) {
 	// Initialize entities and attack intervals.
 	enemyHp := battle.Enemy.MaxHP
 	playerHp := battle.Player.MaxHP
@@ -22,6 +23,13 @@ func (battle *Battle) SimBattle() {
 	enemyAttackInterval := 1.0 / battle.Enemy.Speed
 
 	// TODO: Event - Battle Start
+	eventQueue.AddEvent(
+		events.BattleStartEvent{
+			Player: battle.Player,
+			Enemy:  battle.Enemy,
+		},
+	)
+
 	fmt.Printf("Starting battle! Player life: %d -- Enemy life: %d\n", playerHp, enemyHp)
 
 	startTime := time.Now()
@@ -36,6 +44,7 @@ func (battle *Battle) SimBattle() {
 
 			// Check if the enemy has been defeated.
 			if battle.Enemy.CurrentHP <= 0 {
+
 				// TODO: Event - Enemy death
 				fmt.Println("The enemy has died.")
 				break

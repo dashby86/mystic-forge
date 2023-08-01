@@ -1,17 +1,16 @@
 -- Run DDL scripts to DROP and CREATE tables
-@ddl/gear_slot.sql
-@ddl/player.sql
-@ddl/player_gear.sql
-@ddl/rarity.sql
+source ddl/gear_slot.sql
+source ddl/player.sql
+source ddl/player_gear.sql
+source ddl/rarity.sql
 
 -- Wrap DML scripts in a transaction to ensure atomicity
 BEGIN;
 
 -- Insert data using DML scripts
-@dml/gear_slot.sql
-@dml/player.sql
-@dml/player_gear.sql
-@dml/rarity.sql
+source dml/gear_slot.sql
+source dml/player.sql
+source dml/rarity.sql
 
 -- Commit the transaction
 COMMIT;

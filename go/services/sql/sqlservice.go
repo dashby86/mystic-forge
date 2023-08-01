@@ -25,18 +25,23 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 	// Execute the query
 	err = stmt.QueryRow().Scan(&player.Id, &player.Name)
 	if err != nil {
-		return player, fmt.Errorf("failed to execute the query: %v", err)
+		return player, fmt.Errorf("failed to find player by id: %v", err)
 	}
 
-	stmt, err = s.DB.Prepare("SELECT " +
-		"SUM(hp), " +
-		"SUM(attack), " +
-		"SUM(defense), " +
-		"SUM(speed), " +
-		"SUM(crit), " +
-		"SUM(dodge), " +
-		"SUM(block) " +
-		"FROM player_gear WHERE player_id = 1")
+	stmt, err = s.DB.Prepare(`
+	SELECT
+		COALESCE(SUM(hp), 0) AS sum_hp,
+		COALESCE(SUM(attack), 0) AS sum_attack,
+		COALESCE(SUM(defense), 0) AS sum_defense,
+		COALESCE(SUM(speed), 0) AS sum_speed,
+		COALESCE(SUM(crit), 0) AS sum_crit,
+		COALESCE(SUM(dodge), 0) AS sum_dodge,
+		COALESCE(SUM(block), 0) AS sum_block
+	FROM
+		player_gear
+	WHERE
+		player_id = 1;
+`)
 
 	if err != nil {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
@@ -153,7 +158,7 @@ func (s SqlService) GetEquippedGearBySlot(playerId int, slotId int) (models.Gear
 	}
 	err = stmt.QueryRow(playerId, slotId).Scan(&gear.HP, &gear.Attack, &gear.Defense, &gear.Speed, &gear.Crit, &gear.Dodge, &gear.Block)
 	if err != nil {
-		return gear, fmt.Errorf("failed to execute the query: %v", err)
+		return gear, fmt.Errorf("failed to get equipped gear by slot: %v", err)
 	}
 	return gear, nil
 }
