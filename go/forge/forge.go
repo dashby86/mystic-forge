@@ -1,6 +1,7 @@
 package forge
 
 import (
+	"fmt"
 	"math/rand"
 	"mf/models"
 	sqlService "mf/services/sql"
@@ -43,4 +44,53 @@ func (f Forge) EquipGear(gear models.Gear) {
 	if err != nil {
 		return
 	}
+}
+
+func (f Forge) GenerateRarity(forgeLevel int) string {
+	rarityWeights := []float64{
+		0.55,  // Junk
+		0.30,  // Common
+		0.15,  // Uncommon
+		0.01,  // Rare
+		0.005, // Epic
+		//0.0002, // Legendary
+		//0.0001, // Mythic
+	}
+
+	if forgeLevel >= 10 {
+		rarityWeights = append(rarityWeights, 0.0002) // Legendary
+	}
+
+	if forgeLevel >= 20 {
+		rarityWeights = append(rarityWeights, 0.0001) // Mythic
+	}
+
+	rarityIndex := rand.Float64() * 1.0003
+	forgeLevel = float64(forgeLevel)
+
+	probability := (forgeLevel-10)*0.001 + 0.005
+
+	for i := len(rarityWeights) - 1; i >= 0; i-- {
+		weight := float64(rarityWeights[i])
+		if rarityIndex <= (weight + probability) {
+			rarity := rarityNames[i]
+			prob := weight / 1.0003
+			fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity:", rarity, "Probability:", prob)
+
+			return rarity
+		}
+	}
+
+	fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity: Junk", "Probability: Default")
+	return "Junk"
+}
+
+var rarityNames = []string{
+	"Junk",
+	"Common",
+	"Uncommon",
+	"Rare",
+	"Epic",
+	"Legendary",
+	"Mythic",
 }

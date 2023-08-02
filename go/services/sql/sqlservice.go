@@ -50,7 +50,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
 
-	stmt, err = s.DB.Prepare("SELECT quanity FROM ore_inventory where player_id = 1")
+	stmt, err = s.DB.Prepare("SELECT quantity FROM ore_inventory where player_id = 1")
 	err = stmt.QueryRow().Scan(&player.Ore)
 	if err != nil {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
@@ -113,7 +113,7 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 }
 
 func (s SqlService) SpendOre(playerId int) (bool, error) {
-	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quanity = quanity - 1 where player_id = ?")
+	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quantity = quantity - 1 where player_id = ?")
 	_, err = stmt.Exec(playerId)
 	if err != nil {
 		return false, fmt.Errorf("failed to execute the query: %v", err)
@@ -122,7 +122,7 @@ func (s SqlService) SpendOre(playerId int) (bool, error) {
 }
 
 func (s SqlService) GrantOre(playerId int, amount int) (bool, error) {
-	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quanity = quanity + ? where player_id = ?")
+	stmt, err := s.DB.Prepare("UPDATE ore_inventory SET quantity = quantity + ? where player_id = ?")
 	_, err = stmt.Exec(amount, playerId)
 	if err != nil {
 		return false, fmt.Errorf("failed to execute the query: %v", err)
