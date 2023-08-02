@@ -3,6 +3,7 @@ source ddl/gear_slot.sql
 source ddl/player.sql
 source ddl/player_gear.sql
 source ddl/rarity.sql
+source ddl/ore_inventory.sql
 
 -- Wrap DML scripts in a transaction to ensure atomicity
 BEGIN;

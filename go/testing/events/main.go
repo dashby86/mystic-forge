@@ -3,13 +3,22 @@ package main
 import (
 	"mf/events"
 	"mf/models"
+	"sync"
+	"time"
 )
 
 func main() {
 	// Test the events engine
 	eventQueue := &events.EventQueue{}
+
+	// Create a channel to handle early cancellation
+	stop := make(chan struct{})
+
+	// Create a wait group to wait for goroutines to finish
+	var wg sync.WaitGroup
+
 	// Process events
-	go eventQueue.EventDispatcher()
+	go eventQueue.Dispatcher(&wg, stop)
 
 	eventQueue.AddEvent(events.BattleStartEvent{
 		Player: models.Player{
@@ -38,4 +47,8 @@ func main() {
 			Block:     25.00,
 		},
 	})
+
+	for {
+		time.Sleep(1 * time.Second)
+	}
 }
