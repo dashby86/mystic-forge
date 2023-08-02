@@ -15,7 +15,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 	fmt.Println("Querying...")
 	player := models.Player{}
 	// Prepare the SQL statement
-	stmt, err := s.DB.Prepare("SELECT id, name FROM player WHERE id = 1")
+	stmt, err := s.DB.Prepare("SELECT id, name, player_level, forge_level FROM player WHERE id = 1")
 	if err != nil {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
@@ -26,7 +26,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		}
 	}(stmt)
 	// Execute the query
-	err = stmt.QueryRow().Scan(&player.Id, &player.Name)
+	err = stmt.QueryRow().Scan(&player.Id, &player.Name, &player.Level, &player.ForgeLevel)
 	if err != nil {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}

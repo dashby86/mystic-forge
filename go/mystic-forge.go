@@ -549,27 +549,26 @@ func (g *game) Battle() {
 }
 
 func (g *game) forge() {
-	//g.ui.Container.Children()
-	//if g.Crafted == false && g.player.Ore > 0 {
-	// Craft equipment
-	fmt.Println("Crafting equipment...")
-	//gear := models.Gear{}
-	g.player, _ = g.sql.GetPlayerByID()
-	//rand.Intn(50) + 1,
-	g.Forge.GenerateRarity(rand.Intn(50) + 1)
-	//gear := g.Forge.CraftGear()
-	//_, _ = g.sql.SpendOre(1)
-	//current, err := g.sql.GetEquipedGearBySlot(1, gear.SlotId)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//spew.Dump(current)
-	//g.ShowCraftMenu(current, gear)
-	//g.craftedGear = gear
+	g.ui.Container.Children()
+	if g.Crafted == false && g.player.Ore > 0 {
+		// Craft equipment
+		fmt.Println("Crafting equipment...")
+		//gear := models.Gear{}
+		g.player, _ = g.sql.GetPlayerByID()
+		g.Forge.GenerateRarity(rand.Intn(50) + 1)
+		gear := g.Forge.CraftGear()
+		_, _ = g.sql.SpendOre(1)
+		current, err := g.sql.GetEquipedGearBySlot(1, gear.SlotId)
+		if err != nil {
+			log.Fatal(err)
+		}
+		spew.Dump(current)
+		g.ShowCraftMenu(current, gear)
+		g.craftedGear = gear
 
-	//spew.Dump(gear)
-	g.Crafted = true
-	//}
+		spew.Dump(gear)
+		g.Crafted = true
+	}
 }
 
 func gearTextTemplate() {

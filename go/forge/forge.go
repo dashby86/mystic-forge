@@ -2,6 +2,7 @@ package forge
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"mf/models"
 	sqlService "mf/services/sql"
@@ -15,29 +16,35 @@ type Forge struct {
 
 func (f Forge) CraftGear() models.Gear {
 	rand.Seed(time.Now().UnixNano())
-	tier := f.GenerateRarity(f.Player.)
+	tier := f.GenerateRarity(f.Player.ForgeLevel)
+	playerLevel := rand.Intn(50) + 1
 	gear := models.Gear{
-		Level:   1,
-		HP:      determineBaseStats(20),
-		Attack:  determineBaseStats(4),
-		Defense: determineBaseStats(2),
-		Speed:   determineBaseStats(1),
+		Level:   playerLevel,
+		HP:      determineBaseStats(20, playerLevel, tier),
+		Attack:  determineBaseStats(4, playerLevel, tier),
+		Defense: determineBaseStats(2, playerLevel, tier),
+		Speed:   determineBaseStats(1, playerLevel, tier),
 		Crit:    rand.Intn(2) + 1,
 		Dodge:   rand.Intn(2) + 1,
 		Block:   rand.Intn(2) + 1,
 		SlotId:  rand.Intn(8) + 1,
-		Rarity:  rand.Intn(2) + 1,
+		Rarity:  tier,
 	}
 	return gear
 }
 
 func determineBaseStats(baseStat int, playerLevel int, tier int) int {
 	rand.Seed(time.Now().UnixNano())
-	level := 55
-	min := level * 4 * baseStat
-	max := level * 6 * baseStat
-	return (rand.Intn(max-min+1) + min)
-	//return baseStat + (level *)
+	level := float64(playerLevel)
+	tierFloat := float64(tier)
+	tierMultipler := tierFloat/10 + 1
+	min := int(math.Round(level * 4 * float64(baseStat) * tierMultipler))
+	max := int(math.Round(level * 5 * float64(baseStat) * tierMultipler))
+	fmt.Printf("min %d * 4 * %d * (%d) = %d\n", level, baseStat, tierMultipler, min)
+	fmt.Printf("max %d * 5 * %d * (%d) = %d\n", level, baseStat, tierMultipler, max)
+	fmt.Printf("tier multiplier %d\n", tierMultipler)
+	fmt.Printf("tier multiplier %d\n", tierMultipler)
+	return rand.Intn(max-min+1) + min
 }
 
 func (f Forge) EquipGear(gear models.Gear) {
@@ -51,7 +58,7 @@ func (f Forge) EquipGear(gear models.Gear) {
 * todo pull tiers from db
 *
  */
-func (f Forge) GenerateRarity(forgeLevel int) string {
+func (f Forge) GenerateRarity(forgeLevel int) int {
 	rarityWeights := []float64{
 		0.55,  // Junk
 		0.30,  // Common
@@ -59,7 +66,6 @@ func (f Forge) GenerateRarity(forgeLevel int) string {
 		0.05,  // Rare
 		0.005, // Epic
 	}
-	forgeLevel = rand.Intn(50) + 1
 	if forgeLevel >= 10 {
 		rarityWeights = append(rarityWeights, 0.0002) // Legendary
 	}
@@ -78,12 +84,12 @@ func (f Forge) GenerateRarity(forgeLevel int) string {
 			rarity := rarityNames[i]
 			prob := (weight + probability) / 1.0003
 			fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity:", rarity, "Probability:", prob)
-			return rarityNames[i]
+			return i
 		}
 		fmt.Println("Forge Level:", forgeLevel, "Rarity:", rarityNames[i], "Probability:", (weight+probability)/1.0003)
 	}
 	fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity: Junk", "Probability: Default")
-	return rarityNames[0]
+	return 0
 }
 
 var rarityNames = []string{
