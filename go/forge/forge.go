@@ -15,6 +15,7 @@ type Forge struct {
 
 func (f Forge) CraftGear() models.Gear {
 	rand.Seed(time.Now().UnixNano())
+	tier := f.GenerateRarity(f.Player.)
 	gear := models.Gear{
 		Level:   1,
 		HP:      determineBaseStats(20),
@@ -30,7 +31,7 @@ func (f Forge) CraftGear() models.Gear {
 	return gear
 }
 
-func determineBaseStats(baseStat int) int {
+func determineBaseStats(baseStat int, playerLevel int, tier int) int {
 	rand.Seed(time.Now().UnixNano())
 	level := 55
 	min := level * 4 * baseStat
@@ -46,43 +47,43 @@ func (f Forge) EquipGear(gear models.Gear) {
 	}
 }
 
+/**
+* todo pull tiers from db
+*
+ */
 func (f Forge) GenerateRarity(forgeLevel int) string {
 	rarityWeights := []float64{
 		0.55,  // Junk
 		0.30,  // Common
 		0.15,  // Uncommon
-		0.01,  // Rare
+		0.05,  // Rare
 		0.005, // Epic
-		//0.0002, // Legendary
-		//0.0001, // Mythic
 	}
-
+	forgeLevel = rand.Intn(50) + 1
 	if forgeLevel >= 10 {
 		rarityWeights = append(rarityWeights, 0.0002) // Legendary
 	}
-
 	if forgeLevel >= 20 {
 		rarityWeights = append(rarityWeights, 0.0001) // Mythic
 	}
-
+	rand.Seed(time.Now().UnixNano())
 	rarityIndex := rand.Float64() * 1.0003
-	forgeLevel = float64(forgeLevel)
 
-	probability := (forgeLevel-10)*0.001 + 0.005
-
+	forgeLevelFloat := float64(forgeLevel)
+	probability := (forgeLevelFloat-10)*0.001 + 0.005
 	for i := len(rarityWeights) - 1; i >= 0; i-- {
 		weight := float64(rarityWeights[i])
+		fmt.Printf("roll: %d weight %d\n", rarityIndex, weight+probability)
 		if rarityIndex <= (weight + probability) {
 			rarity := rarityNames[i]
-			prob := weight / 1.0003
+			prob := (weight + probability) / 1.0003
 			fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity:", rarity, "Probability:", prob)
-
-			return rarity
+			return rarityNames[i]
 		}
+		fmt.Println("Forge Level:", forgeLevel, "Rarity:", rarityNames[i], "Probability:", (weight+probability)/1.0003)
 	}
-
 	fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity: Junk", "Probability: Default")
-	return "Junk"
+	return rarityNames[0]
 }
 
 var rarityNames = []string{
