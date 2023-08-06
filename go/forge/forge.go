@@ -16,14 +16,17 @@ type Forge struct {
 
 func (f Forge) CraftGear() models.Gear {
 	rand.Seed(time.Now().UnixNano())
-	tier := f.GenerateRarity(f.Player.ForgeLevel)
+	//random level for testing
 	playerLevel := rand.Intn(50) + 1
+	level := generateLevel(playerLevel)
+	fmt.Println("player level: ", playerLevel, "   level: ", level)
+	tier := f.GenerateRarity(f.Player.ForgeLevel)
 	gear := models.Gear{
-		Level:   playerLevel,
-		HP:      determineBaseStats(20, playerLevel, tier),
-		Attack:  determineBaseStats(4, playerLevel, tier),
-		Defense: determineBaseStats(2, playerLevel, tier),
-		Speed:   determineBaseStats(1, playerLevel, tier),
+		Level:   level,
+		HP:      determineBaseStats(20, level, tier),
+		Attack:  determineBaseStats(4, level, tier),
+		Defense: determineBaseStats(2, level, tier),
+		Speed:   determineBaseStats(1, level, tier),
 		Crit:    rand.Intn(2) + 1,
 		Dodge:   rand.Intn(2) + 1,
 		Block:   rand.Intn(2) + 1,
@@ -33,17 +36,17 @@ func (f Forge) CraftGear() models.Gear {
 	return gear
 }
 
-func determineBaseStats(baseStat int, playerLevel int, tier int) int {
+func determineBaseStats(baseStat int, gearLevel int, tier int) int {
 	rand.Seed(time.Now().UnixNano())
-	level := float64(playerLevel)
+	level := float64(gearLevel)
 	tierFloat := float64(tier)
 	tierMultipler := tierFloat/10 + 1
 	min := int(math.Round(level * 4 * float64(baseStat) * tierMultipler))
 	max := int(math.Round(level * 5 * float64(baseStat) * tierMultipler))
-	fmt.Printf("min %d * 4 * %d * (%d) = %d\n", level, baseStat, tierMultipler, min)
-	fmt.Printf("max %d * 5 * %d * (%d) = %d\n", level, baseStat, tierMultipler, max)
-	fmt.Printf("tier multiplier %d\n", tierMultipler)
-	fmt.Printf("tier multiplier %d\n", tierMultipler)
+	fmt.Printf("min %2f * 4 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, min)
+	fmt.Printf("max %2f * 5 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, max)
+	fmt.Printf("tier multiplier %2f\n", tierMultipler)
+	fmt.Printf("tier multiplier %2f\n", tierMultipler)
 	return rand.Intn(max-min+1) + min
 }
 
@@ -79,7 +82,7 @@ func (f Forge) GenerateRarity(forgeLevel int) int {
 	probability := (forgeLevelFloat-10)*0.001 + 0.005
 	for i := len(rarityWeights) - 1; i >= 0; i-- {
 		weight := float64(rarityWeights[i])
-		fmt.Printf("roll: %d weight %d\n", rarityIndex, weight+probability)
+		fmt.Printf("roll: %2f weight %2f\n", rarityIndex, weight+probability)
 		if rarityIndex <= (weight + probability) {
 			rarity := rarityNames[i]
 			prob := (weight + probability) / 1.0003
@@ -100,4 +103,21 @@ var rarityNames = []string{
 	"Epic",
 	"Legendary",
 	"Mythic",
+}
+
+func generateLevel(playerLevel int) int {
+	odds := []int{
+		playerLevel - 2,
+		playerLevel - 1,
+		playerLevel - 1,
+		playerLevel,
+		playerLevel,
+		playerLevel,
+		playerLevel,
+		playerLevel + 1,
+		playerLevel + 1,
+		playerLevel + 2,
+		playerLevel + 3,
+	}
+	return odds[rand.Intn(10)+1]
 }
