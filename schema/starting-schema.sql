@@ -2,12 +2,15 @@ CREATE TABLE IF NOT EXISTS `player` (
     `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'pk',
     `name` varchar(255) NOT NULL DEFAULT '',
     `player_level` int(11) unsigned NOT NULL DEFAULT 1,
+    `player_exp` int(22) unsigned NOT NULL DEFAULT 0,
     `forge_level` int(11) unsigned NOT NULL DEFAULT 1,
     `is_active` TINYINT(1) DEFAULT 1,
     `created` int(11) NOT NULL DEFAULT 0,
     `updated` int(11) NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+INSERT IGNORE INTO `app`.`player` (`name`) VALUES ('dashpy');
 
 CREATE TABLE IF NOT EXISTS `rarity` (
     `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'pk',
