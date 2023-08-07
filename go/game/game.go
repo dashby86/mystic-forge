@@ -421,8 +421,6 @@ func (g *Game) BattleButton() {
 	}
 	cb := widget.NewButton(
 		widget.ButtonOpts.Image(button),
-		//widget.ButtonOpts.TextPadding(res.button.padding),
-		//widget.ButtonOpts.Text("Close", res.button.face, res.button.text),
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
 			g.Battle()
 		}),

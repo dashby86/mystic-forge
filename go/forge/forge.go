@@ -2,6 +2,7 @@ package forge
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"mf/models"
@@ -15,6 +16,7 @@ type Forge struct {
 }
 
 func (f Forge) CraftGear() models.Gear {
+	calculateLevelAndExpRequired(2000)
 	rand.Seed(time.Now().UnixNano())
 	//random level for testing
 	playerLevel := rand.Intn(50) + 1
@@ -32,6 +34,10 @@ func (f Forge) CraftGear() models.Gear {
 		Block:   rand.Intn(2) + 1,
 		SlotId:  rand.Intn(8) + 1,
 		Rarity:  tier,
+	}
+	err := f.Sql.GrantExp(f.Player.Id, tier+1)
+	if err != nil {
+		log.Fatal(err)
 	}
 	return gear
 }
@@ -120,4 +126,26 @@ func generateLevel(playerLevel int) int {
 		playerLevel + 3,
 	}
 	return odds[rand.Intn(10)+1]
+}
+
+func calculateLevelAndExpRequired(accumulatedExp float64) (int, float64) {
+	baseExp := 20.00
+	expIncrement := 0.10
+
+	level := 1.0
+	expRequired := baseExp
+
+	for accumulatedExp >= expRequired {
+		level++
+		expRequired = expRequired * (1 + expIncrement)
+		fmt.Println("weird calc: ", math.Round(expRequired*(1.00+expIncrement)))
+	}
+
+	fmt.Printf("level: %2f\n", level)
+
+	return int(level), expRequired - accumulatedExp
+}
+
+func (f Forge) grantExp(exp int) {
+
 }

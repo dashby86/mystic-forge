@@ -151,3 +151,12 @@ func (s SqlService) GetEquipedGearBySlot(playerId int, slotId int) (models.Gear,
 	}
 	return gear, nil
 }
+
+func (s SqlService) GrantExp(playerId int, exp int) error {
+	stmt, err := s.DB.Prepare("UPDATE PLAYER SET player_exp = player_exp + ? WHERE id = ?")
+	_, err = stmt.Exec(exp, playerId)
+	if err != nil {
+		return fmt.Errorf("failed to execute the query: %v", err)
+	}
+	return nil
+}
