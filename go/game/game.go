@@ -418,11 +418,13 @@ func (g *Game) Anvil() {
 
 func (g *Game) Battle() {
 
+	enemy := g.generateNextEnemy(g.Player)
+
 	battler := battle.Battle{
-		Player: g.Player,
-		Enemy:  g.generateNextEnemy(g.Player),
-		Sql:    g.Sql,
+		Player: &g.Player,
+		Enemy:  &enemy,
 	}
+
 	battler.SimBattle(g.Events)
 }
 

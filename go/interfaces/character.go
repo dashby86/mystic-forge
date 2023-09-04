@@ -1,4 +1,4 @@
-package models
+package interfaces
 
 type Character interface {
 	GetId() int
