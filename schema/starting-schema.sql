@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `player` (
     `player_level` int(11) unsigned NOT NULL DEFAULT 1,
     `player_exp` int(22) unsigned NOT NULL DEFAULT 0,
     `forge_level` int(11) unsigned NOT NULL DEFAULT 1,
+    `forge_exp` int(22) unsigned NOT NULL DEFAULT 0,
     `is_active` TINYINT(1) DEFAULT 1,
     `created` int(11) NOT NULL DEFAULT 0,
     `updated` int(11) NOT NULL DEFAULT 0,
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `gear_slot` (
 CREATE TABLE IF NOT EXISTS `player_gear` (
     `player_id` int(11) unsigned NOT NULL,
     `gear_slot_id` int(11) unsigned NOT NULL,
+    `level` smallint(4) unsigned NOT NULL DEFAULT 0,
     `rarity_id` int(11) unsigned NOT NULL,
     `hp` int(11) unsigned NOT NULL DEFAULT 0,
     `attack` int(11) unsigned NOT NULL DEFAULT 0,

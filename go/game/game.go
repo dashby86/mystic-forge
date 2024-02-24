@@ -19,6 +19,7 @@ import (
 	"mf/forge"
 	"mf/models"
 	sqlService "mf/services/sql"
+	"runtime"
 )
 
 type Game struct {
@@ -34,6 +35,7 @@ type Game struct {
 func (g *Game) Update() error {
 	g.Ui.Update()
 	g.CharWindow()
+	runtime.GC()
 	return nil
 }
 
@@ -82,7 +84,7 @@ func (g *Game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		widget.ContainerOpts.Layout(
 			widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
-				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true}),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true, true}),
 				//widget.GridLayoutOpts.Padding(15),
 				widget.GridLayoutOpts.Padding(widget.Insets{
 					Top:    45,
@@ -146,6 +148,10 @@ func (g *Game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 
 	//face, _ := loadFont(12)
 	c2.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Level %d: %s", gear.Level, gear.GetRarity(gear.Rarity)), face, color.Color(color.White)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c2.AddChild(widget.NewText(
 		widget.TextOpts.Text(fmt.Sprintf("HP: %d", gear.HP), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
@@ -179,7 +185,7 @@ func (g *Game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		widget.ContainerOpts.Layout(
 			widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
-				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true}),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true, true}),
 				//widget.GridLayoutOpts.Padding(15),
 				widget.GridLayoutOpts.Padding(widget.Insets{
 					Top:    45,
@@ -191,6 +197,10 @@ func (g *Game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 			),
 		),
 	)
+	c3.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Level %d: %s", crafted.Level, crafted.GetRarity(crafted.Rarity)), face, color.Color(color.White)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
 	c3.AddChild(widget.NewText(
 		widget.TextOpts.Text(fmt.Sprintf("HP: %d", crafted.HP), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
@@ -321,7 +331,7 @@ func (g *Game) CharWindow() {
 		widget.ContainerOpts.Layout(
 			widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
-				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true}),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true, true, true}),
 				//widget.GridLayoutOpts.Padding(15),
 				widget.GridLayoutOpts.Padding(widget.Insets{
 					Top:    80,
@@ -329,11 +339,19 @@ func (g *Game) CharWindow() {
 					Right:  40,
 					Bottom: 80,
 				}),
-				widget.GridLayoutOpts.Spacing(30, 15),
+				widget.GridLayoutOpts.Spacing(30, 10),
 			),
 		),
 	)
 	face, _ := loadFont(12)
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("%s", g.Player.Name), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
+	c.AddChild(widget.NewText(
+		widget.TextOpts.Text(fmt.Sprintf("Level: %d Exp: %d", g.Player.Level, g.Player.Experience), face, color.Color(color.Black)),
+		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
+	))
 	c.AddChild(widget.NewText(
 		widget.TextOpts.Text(fmt.Sprintf("HP: %d", g.Player.HP), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
@@ -366,20 +384,6 @@ func (g *Game) CharWindow() {
 	window := widget.NewWindow(
 		//Set the main contents of the window
 		widget.WindowOpts.Contents(c),
-		//Set the window above everything else and block input elsewhere
-		//widget.WindowOpts.Modal(),
-		//Set how to close the window. CLICK_OUT will close the window when clicking anywhere
-		//that is not a part of the window object
-		//widget.WindowOpts.CloseMode(widget.CLICK_OUT),
-		//Indicates that the window is draggable. It must have a TitleBar for this to work
-		//widget.WindowOpts.Draggable(),
-		//Set the window resizeable
-		//widget.WindowOpts.Resizeable(),
-		//Set the minimum size the window can be
-		//widget.WindowOpts.MinSize(200, 100),
-		//Set the maximum size a window can be
-		//widget.WindowOpts.MaxSize(200, 100),
-		//Set the callback that triggers when a move is complete
 	)
 	//Create a rect with the preferred size of the content
 	r := my_image.Rect(0, 0, 240, 360)

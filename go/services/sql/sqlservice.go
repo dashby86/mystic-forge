@@ -15,7 +15,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 	fmt.Println("Querying...")
 	player := models.Player{}
 	// Prepare the SQL statement
-	stmt, err := s.DB.Prepare("SELECT id, name, player_level, forge_level FROM player WHERE id = 1")
+	stmt, err := s.DB.Prepare("SELECT id, name, player_level, forge_level, player_exp FROM player WHERE id = 1")
 	if err != nil {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
@@ -26,19 +26,19 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		}
 	}(stmt)
 	// Execute the query
-	err = stmt.QueryRow().Scan(&player.Id, &player.Name, &player.Level, &player.ForgeLevel)
+	err = stmt.QueryRow().Scan(&player.Id, &player.Name, &player.Level, &player.ForgeLevel, &player.Experience)
 	if err != nil {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
 
 	stmt, err = s.DB.Prepare("SELECT " +
-		"SUM(hp), " +
-		"SUM(attack), " +
-		"SUM(defense), " +
-		"SUM(speed), " +
-		"SUM(crit), " +
-		"SUM(dodge), " +
-		"SUM(block) " +
+		"COALESCE(SUM(hp), 0), " +
+		"COALESCE(SUM(attack), 0), " +
+		"COALESCE(SUM(defense), 0), " +
+		"COALESCE(SUM(speed), 0), " +
+		"COALESCE(SUM(crit), 0), " +
+		"COALESCE(SUM(dodge), 0), " +
+		"COALESCE(SUM(block), 0) " +
 		"FROM player_gear WHERE player_id = 1")
 
 	if err != nil {
@@ -59,9 +59,11 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 }
 
 func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool, error) {
+
 	stmt, err := s.DB.Prepare("INSERT INTO player_gear (" +
 		"player_id, " +
 		"gear_slot_id, " +
+		"level, " +
 		"rarity_id, " +
 		"hp, " +
 		"attack, " +
@@ -70,9 +72,12 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 		"crit, " +
 		"dodge, " +
 		"block" +
-		")" +
-		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+		") " +
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
 		"ON DUPLICATE KEY UPDATE " +
+		"player_id = ?, " +
+		"gear_slot_id = ?, " +
+		"level = ?, " +
 		"rarity_id = ?, " +
 		"hp = ?, " +
 		"attack = ?, " +
@@ -80,23 +85,15 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 		"speed = ?, " +
 		"crit = ?, " +
 		"dodge = ?, " +
-		"block = ? ")
+		"block = ?")
 	//"ON DUPLICATE KEY UPDATE ")
 	if err != nil {
-		return false, fmt.Errorf("failed to prepare the SQL statement: %v", err)
+		log.Fatal("failed to prepare the SQL statement: %v", err)
 	}
-	defer stmt.Close()
 	// Execute the query
 	_, err = stmt.Exec(
 		player.Id,
 		gear.SlotId,
-		gear.Rarity,
-		gear.HP,
-		gear.Attack,
-		gear.Defense,
-		gear.Speed,
-		gear.Crit,
-		gear.Dodge,
 		gear.Level,
 		gear.Rarity,
 		gear.HP,
@@ -105,9 +102,25 @@ func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool
 		gear.Speed,
 		gear.Crit,
 		gear.Dodge,
-		gear.Level)
+		gear.Block,
+		player.Id,
+		gear.SlotId,
+		gear.Level,
+		gear.Rarity,
+		gear.HP,
+		gear.Attack,
+		gear.Defense,
+		gear.Speed,
+		gear.Crit,
+		gear.Dodge,
+		gear.Block)
+
 	if err != nil {
 		log.Fatalf("Failed to query the database: %v", err)
+	}
+	err = stmt.Close()
+	if err != nil {
+		return false, err
 	}
 	return true, nil
 }
@@ -133,26 +146,36 @@ func (s SqlService) GrantOre(playerId int, amount int) (bool, error) {
 func (s SqlService) GetEquipedGearBySlot(playerId int, slotId int) (models.Gear, error) {
 	gear := models.Gear{}
 	stmt, err := s.DB.Prepare("SELECT " +
-		"hp, " +
-		"attack, " +
-		"defense, " +
-		"speed, " +
-		"crit, " +
-		"dodge, " +
-		"block " +
+		"COALESCE(hp, 0), " +
+		"COALESCE(level, 0), " +
+		"COALESCE(rarity_id, 0), " +
+		"COALESCE(attack, 0), " +
+		"COALESCE(defense, 0), " +
+		"COALESCE(speed, 0), " +
+		"COALESCE(crit, 0), " +
+		"COALESCE(dodge, 0), " +
+		"COALESCE(block, 0) " +
 		"FROM player_gear WHERE player_id = ? AND gear_slot_id = ?")
 
 	if err != nil {
 		return gear, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
-	err = stmt.QueryRow(playerId, slotId).Scan(&gear.HP, &gear.Attack, &gear.Defense, &gear.Speed, &gear.Crit, &gear.Dodge, &gear.Block)
-	if err != nil {
+	err = stmt.QueryRow(playerId, slotId).Scan(&gear.HP, &gear.Level, &gear.Rarity, &gear.Attack, &gear.Defense, &gear.Speed, &gear.Crit, &gear.Dodge, &gear.Block)
+	if err != nil && err != sql.ErrNoRows {
 		return gear, fmt.Errorf("failed to execute the query: %v", err)
 	}
 	return gear, nil
 }
 
 func (s SqlService) GrantExp(playerId int, exp int) error {
+	stmt, err := s.DB.Prepare("UPDATE PLAYER SET player_exp = player_exp + ? WHERE id = ?")
+	_, err = stmt.Exec(exp, playerId)
+	if err != nil {
+		return fmt.Errorf("failed to execute the query: %v", err)
+	}
+	return nil
+}
+func (s SqlService) GrantForgeExp(playerId int, exp int) error {
 	stmt, err := s.DB.Prepare("UPDATE PLAYER SET player_exp = player_exp + ? WHERE id = ?")
 	_, err = stmt.Exec(exp, playerId)
 	if err != nil {

@@ -68,6 +68,7 @@ func (f Forge) EquipGear(gear models.Gear) {
 *
  */
 func (f Forge) GenerateRarity(forgeLevel int) int {
+	forgeLevel = 20
 	rarityWeights := []float64{
 		0.55,  // Junk
 		0.30,  // Common
@@ -82,11 +83,11 @@ func (f Forge) GenerateRarity(forgeLevel int) int {
 		rarityWeights = append(rarityWeights, 0.0001) // Mythic
 	}
 	rand.Seed(time.Now().UnixNano())
-	rarityIndex := rand.Float64() * 1.0003
 
 	forgeLevelFloat := float64(forgeLevel)
 	probability := (forgeLevelFloat-10)*0.001 + 0.005
 	for i := len(rarityWeights) - 1; i >= 0; i-- {
+		rarityIndex := rand.Float64() * 1.0003
 		weight := float64(rarityWeights[i])
 		fmt.Printf("roll: %2f weight %2f\n", rarityIndex, weight+probability)
 		if rarityIndex <= (weight + probability) {

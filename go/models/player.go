@@ -3,6 +3,7 @@ package models
 type Player struct {
 	Id         int
 	Name       string
+	Experience int
 	Level      int
 	ForgeLevel int
 	HP         int
