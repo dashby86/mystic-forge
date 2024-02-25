@@ -16,6 +16,7 @@ import (
 	"log"
 	"math/rand"
 	"mf/battle"
+	"mf/enemy"
 	"mf/forge"
 	"mf/models"
 	sqlService "mf/services/sql"
@@ -168,15 +169,15 @@ func (g *Game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", gear.Crit), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%.2f", gear.Crit), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", gear.Dodge), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%.2f", gear.Dodge), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c2.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", gear.Block), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Block: %%%.2f", gear.Block), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
@@ -218,15 +219,15 @@ func (g *Game) ShowCraftMenu(gear models.Gear, crafted models.Gear) {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", crafted.Crit), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%.2f", crafted.Crit), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", crafted.Dodge), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%.2f", crafted.Dodge), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c3.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", crafted.Block), face, color.Color(color.White)),
+		widget.TextOpts.Text(fmt.Sprintf("Block: %%%.2f", crafted.Block), face, color.Color(color.White)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
@@ -369,15 +370,15 @@ func (g *Game) CharWindow() {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%d", g.Player.Crit), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Crit: %%%.2f", g.Player.Crit), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%d", g.Player.Dodge), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Dodge: %%%.2f", g.Player.Dodge), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 	c.AddChild(widget.NewText(
-		widget.TextOpts.Text(fmt.Sprintf("Block: %%%d", g.Player.Block), face, color.Color(color.Black)),
+		widget.TextOpts.Text(fmt.Sprintf("Block: %%%.2f", g.Player.Block), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
@@ -488,20 +489,23 @@ func (g *Game) Anvil() {
 }
 
 func (g *Game) Battle() {
-	enemy := models.Enemy{
+	enemy := enemy.Enemy{
 		Name:    "Goblin",
-		HP:      40416,
-		Attack:  6178,
-		Defense: 560,
-		Speed:   281,
-		Crit:    20,
-		Dodge:   50,
+		Level:   1,
+		HP:      2000,
+		Attack:  500,
+		Defense: 400,
+		Speed:   3,
+		Crit:    3,
+		Dodge:   2,
 		Block:   1,
 	}
 
+	currentEnemy := enemy.CreateEnemy(1, enemy)
+
 	battler := battle.Battle{
 		Player: g.Player,
-		Enemey: enemy,
+		Enemy:  currentEnemy,
 		Sql:    g.Sql,
 	}
 	battler.SimBattle()

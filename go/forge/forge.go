@@ -19,7 +19,7 @@ func (f Forge) CraftGear() models.Gear {
 	calculateLevelAndExpRequired(2000)
 	rand.Seed(time.Now().UnixNano())
 	//random level for testing
-	playerLevel := rand.Intn(50) + 1
+	playerLevel := f.Player.Level
 	level := generateLevel(playerLevel)
 	fmt.Println("player level: ", playerLevel, "   level: ", level)
 	tier := f.GenerateRarity(f.Player.ForgeLevel)
@@ -29,9 +29,9 @@ func (f Forge) CraftGear() models.Gear {
 		Attack:  determineBaseStats(4, level, tier),
 		Defense: determineBaseStats(2, level, tier),
 		Speed:   determineBaseStats(1, level, tier),
-		Crit:    rand.Intn(2) + 1,
-		Dodge:   rand.Intn(2) + 1,
-		Block:   rand.Intn(2) + 1,
+		Crit:    rand.Float64() + 1,
+		Dodge:   rand.Float64() + 1,
+		Block:   rand.Float64() + 1,
 		SlotId:  rand.Intn(8) + 1,
 		Rarity:  tier,
 	}
@@ -49,10 +49,10 @@ func determineBaseStats(baseStat int, gearLevel int, tier int) int {
 	tierMultipler := tierFloat/10 + 1
 	min := int(math.Round(level * 4 * float64(baseStat) * tierMultipler))
 	max := int(math.Round(level * 5 * float64(baseStat) * tierMultipler))
-	fmt.Printf("min %2f * 4 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, min)
-	fmt.Printf("max %2f * 5 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, max)
-	fmt.Printf("tier multiplier %2f\n", tierMultipler)
-	fmt.Printf("tier multiplier %2f\n", tierMultipler)
+	//fmt.Printf("min %2f * 4 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, min)
+	//fmt.Printf("max %2f * 5 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, max)
+	//fmt.Printf("tier multiplier %2f\n", tierMultipler)
+	//fmt.Printf("tier multiplier %2f\n", tierMultipler)
 	return rand.Intn(max-min+1) + min
 }
 

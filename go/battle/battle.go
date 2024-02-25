@@ -3,6 +3,7 @@ package battle
 import (
 	"fmt"
 	"math/rand"
+	"mf/enemy"
 	"mf/models"
 	sqlService "mf/services/sql"
 	"time"
@@ -10,14 +11,14 @@ import (
 
 type Battle struct {
 	Player models.Player
-	Enemey models.Enemy
+	Enemy  enemy.Enemy
 	Sql    sqlService.SqlService
 }
 
 func (battle Battle) SimBattle() {
 	// Initialize the turn variable.
 	//turn := 1
-	enemyHp := battle.Enemey.HP
+	enemyHp := battle.Enemy.HP
 	playerHp := battle.Player.HP
 
 	fmt.Printf("Starting battle! Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
@@ -25,15 +26,15 @@ func (battle Battle) SimBattle() {
 	// Simulate the battle.
 	for {
 		// Check which entity gets to attack first.
-		if battle.Player.Speed > battle.Enemey.Speed {
-			playerAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+		if battle.Player.Speed > battle.Enemy.Speed {
+			playerAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			if enemyHp > 0 {
-				enemyAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+				enemyAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			}
 		} else {
-			enemyAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+			enemyAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			if playerHp > 0 {
-				playerAttacks(battle.Player, battle.Enemey, &playerHp, &enemyHp)
+				playerAttacks(battle.Player, battle.Enemy, &playerHp, &enemyHp)
 			}
 		}
 
@@ -54,35 +55,57 @@ func (battle Battle) SimBattle() {
 	}
 }
 
-func playerAttacks(player models.Player, enemy models.Enemy, playerHp *int, enemyHp *int) {
+func playerAttacks(player models.Player, enemy enemy.Enemy, playerHp *int, enemyHp *int) {
 	// Calculate the player's damage.
-	damage := player.Attack - enemy.Defense
-	if rand.Intn(100) < player.Crit {
+	damage := player.Attack
+	baseReduction := float64(enemy.Defense) / (float64(enemy.Defense) + 100.0) // Add .0 to the constant
+	// Constant of 100 for now
+	mitigatedDamage := int(float64(damage) * baseReduction)
+	finalDamage := max(damage-mitigatedDamage, 0)
+
+	if float64(rand.Intn(100)) < player.Crit { // Convert to float64
 		fmt.Println("Critical Strike!")
-		damage *= 2
+		finalDamage *= 2
 	}
 
-	if rand.Intn(100) < enemy.Dodge {
+	if float64(rand.Intn(100)) < player.Dodge { // Convert to float64
 		fmt.Println("Enemy Dodged!")
 	} else {
 		// Apply the damage to the enemy.
-		fmt.Printf("Attacking %s for %d damage.\n", enemy.Name, damage)
-		*enemyHp -= damage
+		fmt.Printf("Attacking %s for %d damage.\n", enemy.Name, finalDamage)
+		*enemyHp -= finalDamage
 	}
+
+	fmt.Println("Enemy Defense:", enemy.Defense)
+	fmt.Println("Base Reduction:", baseReduction)
+	fmt.Println("Mitigated Damage:", mitigatedDamage)
 }
 
-func enemyAttacks(player models.Player, enemy models.Enemy, playerHp *int, enemyHp *int) {
+func enemyAttacks(player models.Player, enemy enemy.Enemy, playerHp *int, enemyHp *int) {
 	// Calculate the enemy's damage.
-	damage := enemy.Attack - player.Defense
+
+	damage := enemy.Attack
+	baseReduction := float64(player.Defense) / (float64(player.Defense) + 100.0) // Add .0 to the constant
+	// Constant of 100 for now
+	mitigatedDamage := int(float64(damage) * baseReduction)
+	finalDamage := max(damage-mitigatedDamage, 0)
+
 	if rand.Intn(100) < enemy.Crit {
-		damage *= 2
+		finalDamage *= 2
 	}
 
-	if rand.Intn(100) < player.Dodge {
+	if float64(rand.Intn(100)) < player.Dodge {
 		fmt.Println("Player Dodged!")
 	} else {
 		// Apply the damage to the player.
-		fmt.Printf("Attacking %s for %d damage.\n", player.Name, damage)
-		*playerHp -= damage
+		fmt.Printf("Attacking %s for %d damage.\n", player.Name, finalDamage)
+		*playerHp -= finalDamage
 	}
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

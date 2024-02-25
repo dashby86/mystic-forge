@@ -8,9 +8,9 @@ type Gear struct {
 	Attack  int
 	Defense int
 	Speed   int
-	Crit    int
-	Dodge   int
-	Block   int
+	Crit    float64
+	Dodge   float64
+	Block   float64
 	SlotId  int
 	Rarity  int
 }

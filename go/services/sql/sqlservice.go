@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"mf/models"
 )
 
@@ -36,9 +37,9 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		"COALESCE(SUM(attack), 0), " +
 		"COALESCE(SUM(defense), 0), " +
 		"COALESCE(SUM(speed), 0), " +
-		"COALESCE(SUM(crit), 0), " +
-		"COALESCE(SUM(dodge), 0), " +
-		"COALESCE(SUM(block), 0) " +
+		"COALESCE(CAST(SUM(crit) AS DECIMAL(5,2)), 0), " +
+		"COALESCE(CAST(SUM(dodge) AS DECIMAL(5,2)), 0), " +
+		"COALESCE(CAST(SUM(block) AS DECIMAL(5,2)), 0) " +
 		"FROM player_gear WHERE player_id = 1")
 
 	if err != nil {
@@ -59,69 +60,27 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 }
 
 func (s SqlService) SaveGearToSlot(player models.Player, gear models.Gear) (bool, error) {
-
 	stmt, err := s.DB.Prepare("INSERT INTO player_gear (" +
-		"player_id, " +
-		"gear_slot_id, " +
-		"level, " +
-		"rarity_id, " +
-		"hp, " +
-		"attack, " +
-		"defense, " +
-		"speed, " +
-		"crit, " +
-		"dodge, " +
-		"block" +
-		") " +
-		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+		"player_id, gear_slot_id, level, rarity_id, hp, attack, defense, speed, crit, dodge, block" +
+		") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
 		"ON DUPLICATE KEY UPDATE " +
-		"player_id = ?, " +
-		"gear_slot_id = ?, " +
-		"level = ?, " +
-		"rarity_id = ?, " +
-		"hp = ?, " +
-		"attack = ?, " +
-		"defense = ?, " +
-		"speed = ?, " +
-		"crit = ?, " +
-		"dodge = ?, " +
-		"block = ?")
-	//"ON DUPLICATE KEY UPDATE ")
+		"player_id = ?, gear_slot_id = ?, level = ?, rarity_id = ?, hp = ?, attack = ?, defense = ?, speed = ?, crit = ?, dodge = ?, block = ?")
+
 	if err != nil {
 		log.Fatal("failed to prepare the SQL statement: %v", err)
 	}
-	// Execute the query
+	defer stmt.Close() // Ensure statement closure
+
 	_, err = stmt.Exec(
-		player.Id,
-		gear.SlotId,
-		gear.Level,
-		gear.Rarity,
-		gear.HP,
-		gear.Attack,
-		gear.Defense,
-		gear.Speed,
-		gear.Crit,
-		gear.Dodge,
-		gear.Block,
-		player.Id,
-		gear.SlotId,
-		gear.Level,
-		gear.Rarity,
-		gear.HP,
-		gear.Attack,
-		gear.Defense,
-		gear.Speed,
-		gear.Crit,
-		gear.Dodge,
-		gear.Block)
+		player.Id, gear.SlotId, gear.Level, gear.Rarity, gear.HP, gear.Attack, gear.Defense, gear.Speed, gear.Crit, gear.Dodge, gear.Block,
+		player.Id, gear.SlotId, gear.Level, gear.Rarity, gear.HP, gear.Attack, gear.Defense, gear.Speed, gear.Crit, gear.Dodge, gear.Block,
+	)
 
 	if err != nil {
 		log.Fatalf("Failed to query the database: %v", err)
-	}
-	err = stmt.Close()
-	if err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
 
@@ -173,6 +132,7 @@ func (s SqlService) GrantExp(playerId int, exp int) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute the query: %v", err)
 	}
+	levelUpPlayer(s, playerId)
 	return nil
 }
 func (s SqlService) GrantForgeExp(playerId int, exp int) error {
@@ -182,4 +142,56 @@ func (s SqlService) GrantForgeExp(playerId int, exp int) error {
 		return fmt.Errorf("failed to execute the query: %v", err)
 	}
 	return nil
+}
+
+func calculateRequiredExp(targetLevel int) int {
+	exponent := 1.1
+	baseExp := 20
+
+	requiredExp := float64(baseExp) * math.Pow(float64(targetLevel), exponent)
+	return int(requiredExp)
+}
+
+func levelUpPlayer(s SqlService, playerID int) (bool, error) {
+	// 1. Begin Transaction
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return false, err
+	}
+
+	// 2. Retrieve Player (within transaction)
+	var currentLevel, currentExp int
+	err = tx.QueryRow("SELECT player_level, player_exp FROM player WHERE id = ? FOR UPDATE", playerID).Scan(&currentLevel, &currentExp)
+	if err != nil {
+		tx.Rollback()
+		return false, err
+	}
+
+	// 3. Calculate Required Exp and Level Up
+	requiredExp := calculateRequiredExp(currentLevel + 1)
+	leveledUp := false // Flag to track if a level up occurred
+
+	for currentExp >= requiredExp {
+		currentLevel++
+		currentExp -= requiredExp
+		requiredExp = calculateRequiredExp(currentLevel + 1)
+		leveledUp = true
+	}
+
+	// 4. Update Database within transaction
+	if leveledUp {
+		_, err = tx.Exec("UPDATE player SET player_level = ?, player_exp = ? WHERE id = ?", currentLevel, currentExp, playerID)
+		if err != nil {
+			tx.Rollback()
+			return false, err
+		}
+	}
+
+	// 5. Commit Transaction
+	err = tx.Commit()
+	if err != nil {
+		return false, err
+	}
+
+	return leveledUp, nil
 }
