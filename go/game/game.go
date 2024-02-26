@@ -27,6 +27,7 @@ type Game struct {
 	Background  *ebiten.Image
 	Crafted     bool
 	Ui          *ebitenui.UI
+	expBar      *widget.ProgressBar
 	Sql         sqlService.SqlService
 	Player      models.Player
 	CraftedGear models.Gear
@@ -38,6 +39,27 @@ func (g *Game) Update() error {
 	g.CharWindow()
 	runtime.GC()
 	return nil
+}
+
+func (g *Game) UpdateProgressBar() int {
+	if g.expBar != nil {
+		currentExp := g.Player.Experience
+		reqExp := g.Player.CalculateRequiredExp(g.Player.Level + 1)
+
+		// Calculate the percentage filled
+		percentageFilled := int(float64(currentExp) / float64(reqExp) * 100)
+
+		// Ensure the percentage is within the range of 0-100
+		if percentageFilled > 100 {
+			percentageFilled = 100
+		} else if percentageFilled < 0 {
+			percentageFilled = 0
+		}
+		return percentageFilled
+
+		//g.expBar.SetCurrent(percentageFilled)
+	}
+	return 0
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -332,7 +354,7 @@ func (g *Game) CharWindow() {
 		widget.ContainerOpts.Layout(
 			widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
-				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true, true, true}),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{true, true, true, true, true, true, true, true, true, true}),
 				//widget.GridLayoutOpts.Padding(15),
 				widget.GridLayoutOpts.Padding(widget.Insets{
 					Top:    80,
@@ -349,6 +371,7 @@ func (g *Game) CharWindow() {
 		widget.TextOpts.Text(fmt.Sprintf("%s", g.Player.Name), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
+
 	c.AddChild(widget.NewText(
 		widget.TextOpts.Text(fmt.Sprintf("Level: %d Exp: %d", g.Player.Level, g.Player.Experience), face, color.Color(color.Black)),
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
@@ -382,6 +405,47 @@ func (g *Game) CharWindow() {
 		//widget.TextOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{0x13, 0x1a, 0x22, 0xff})),
 	))
 
+	// Experience Bar
+	//currentExp := g.Player.Experience
+	//expRequiredForNextLevel := g.Player.CalculateRequiredExp(g.Player.Level + 1)
+
+	expBarContainer := widget.NewContainer(widget.ContainerOpts.Layout(widget.NewRowLayout()))
+
+	// Create the progress bar
+	g.expBar = widget.NewProgressBar(
+		widget.ProgressBarOpts.WidgetOpts(
+			// Set the minimum size for the progress bar.
+			// This is necessary if you wish to have the progress bar be larger than
+			// the provided track image. In this exampe since we are using NineSliceColor
+			// which is 1px x 1px we must set a minimum size.
+			widget.WidgetOpts.MinSize(200, 20),
+		),
+		widget.ProgressBarOpts.Images(
+			// Set the track images (Idle, Hover, Disabled).
+			&widget.ProgressBarImage{
+				Idle:  image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+				Hover: image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+			},
+			// Set the progress images (Idle, Hover, Disabled).
+			&widget.ProgressBarImage{
+				Idle:  image.NewNineSliceColor(color.NRGBA{0, 0, 255, 255}),
+				Hover: image.NewNineSliceColor(color.NRGBA{0, 0, 255, 255}),
+			},
+		),
+		// Set the min, max, and current values.
+		widget.ProgressBarOpts.Values(0, 100, g.UpdateProgressBar()),
+		// Set how much of the track is displayed when the bar is overlayed.
+		widget.ProgressBarOpts.TrackPadding(widget.Insets{
+			Top:    2,
+			Bottom: 2,
+		}),
+	)
+	//g.updateProgressBar() // Initial update
+
+	expBarContainer.AddChild(g.expBar)
+	// ... add other elements to expBarContainer ...
+
+	c.AddChild(expBarContainer)
 	window := widget.NewWindow(
 		//Set the main contents of the window
 		widget.WindowOpts.Contents(c),
@@ -501,7 +565,7 @@ func (g *Game) Battle() {
 		Block:   1,
 	}
 
-	currentEnemy := enemy.CreateEnemy(1, enemy)
+	currentEnemy := enemy.CreateEnemy(g.Player.DungeonLevel, enemy)
 
 	battler := battle.Battle{
 		Player: g.Player,
@@ -509,6 +573,7 @@ func (g *Game) Battle() {
 		Sql:    g.Sql,
 	}
 	battler.SimBattle()
+	g.Player, _ = g.Sql.GetPlayerByID()
 }
 
 func (g *Game) forge() {
@@ -530,6 +595,7 @@ func (g *Game) forge() {
 		g.ShowCraftMenu(current, gear)
 
 		spew.Dump(gear)
+		g.UpdateProgressBar()
 		g.Crafted = true
 	}
 }

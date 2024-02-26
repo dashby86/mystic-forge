@@ -28,6 +28,10 @@ func (g Gear) GetRarity(rarity int) string {
 		return "Rare"
 	case 4:
 		return "Epic"
+	case 5:
+		return "Legendary"
+	case 6:
+		return "Mythic"
 	default:
 		return "Not Found"
 

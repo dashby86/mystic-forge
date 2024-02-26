@@ -9,9 +9,9 @@ type Enemy struct {
 	Attack  int
 	Defense int
 	Speed   int
-	Crit    int
-	Dodge   int
-	Block   int
+	Crit    float64
+	Dodge   float64
+	Block   float64
 }
 
 func (e Enemy) CreateEnemy(level int, baseEnemy Enemy) Enemy {
@@ -19,11 +19,11 @@ func (e Enemy) CreateEnemy(level int, baseEnemy Enemy) Enemy {
 	enemy.Level = level
 
 	// Linear Scaling:
-	enemy.HP = baseEnemy.HP + (level-1)*20          // +20 HP per level
-	enemy.Attack = baseEnemy.Attack + (level-1)*4   // +4 Attack per level
-	enemy.Defense = baseEnemy.Defense + (level-1)*2 // +2 Defense per level
-	enemy.Speed = baseEnemy.Defense + (level-1)*1   // +1 Speed per level
-	rand.Seed(int64(level))                         // Seed the PRNG
+	enemy.HP = baseEnemy.HP + (level-1)*300          // +20 HP per level
+	enemy.Attack = baseEnemy.Attack + (level-1)*55   // +4 Attack per level
+	enemy.Defense = baseEnemy.Defense + (level-1)*18 // +2 Defense per level
+	enemy.Speed = baseEnemy.Defense + (level-1)*7    // +1 Speed per level
+	rand.Seed(int64(level))                          // Seed the PRNG
 
 	// Example for Crit (adjust ranges and weights as needed)
 	critRange := 0.15 // 15% difference between min and max at level 1
@@ -40,7 +40,7 @@ func (e Enemy) CreateEnemy(level int, baseEnemy Enemy) Enemy {
 		crit = 0.25 + (crit-0.25)*diminishingFactor
 	}
 
-	enemy.Crit = int(crit * 100)
+	enemy.Crit = float64(int(crit * 100))
 
 	return enemy
 }

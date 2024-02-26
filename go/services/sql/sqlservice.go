@@ -16,7 +16,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 	fmt.Println("Querying...")
 	player := models.Player{}
 	// Prepare the SQL statement
-	stmt, err := s.DB.Prepare("SELECT id, name, player_level, forge_level, player_exp FROM player WHERE id = 1")
+	stmt, err := s.DB.Prepare("SELECT id, name, dungeon_level, player_level, forge_level, player_exp FROM player WHERE id = 1")
 	if err != nil {
 		return player, fmt.Errorf("failed to prepare the SQL statement: %v", err)
 	}
@@ -27,7 +27,7 @@ func (s SqlService) GetPlayerByID() (models.Player, error) {
 		}
 	}(stmt)
 	// Execute the query
-	err = stmt.QueryRow().Scan(&player.Id, &player.Name, &player.Level, &player.ForgeLevel, &player.Experience)
+	err = stmt.QueryRow().Scan(&player.Id, &player.Name, &player.DungeonLevel, &player.Level, &player.ForgeLevel, &player.Experience)
 	if err != nil {
 		return player, fmt.Errorf("failed to execute the query: %v", err)
 	}
@@ -194,4 +194,18 @@ func levelUpPlayer(s SqlService, playerID int) (bool, error) {
 	}
 
 	return leveledUp, nil
+}
+
+func (s SqlService) UpdateDungeonLevel(playerID int, dungeonLevel int) error {
+	stmt, err := s.DB.Prepare("UPDATE player SET dungeon_level = ? WHERE id = ?")
+	if err != nil {
+		return fmt.Errorf("failed to prepare the SQL statement: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(dungeonLevel, playerID)
+	if err != nil {
+		return fmt.Errorf("failed to execute the query: %v", err)
+	}
+	return nil
 }

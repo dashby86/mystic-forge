@@ -46,12 +46,12 @@ func determineBaseStats(baseStat int, gearLevel int, tier int) int {
 	rand.Seed(time.Now().UnixNano())
 	level := float64(gearLevel)
 	tierFloat := float64(tier)
-	tierMultipler := tierFloat/10 + 1
+	tierMultipler := tierFloat/5 + 1
 	min := int(math.Round(level * 4 * float64(baseStat) * tierMultipler))
 	max := int(math.Round(level * 5 * float64(baseStat) * tierMultipler))
-	//fmt.Printf("min %2f * 4 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, min)
+	fmt.Printf("min %2f * 4 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, min)
 	//fmt.Printf("max %2f * 5 * %d * (%2f) = %d\n", level, baseStat, tierMultipler, max)
-	//fmt.Printf("tier multiplier %2f\n", tierMultipler)
+	fmt.Printf("tier multiplier %2f\n", tierMultipler)
 	//fmt.Printf("tier multiplier %2f\n", tierMultipler)
 	return rand.Intn(max-min+1) + min
 }
@@ -68,7 +68,7 @@ func (f Forge) EquipGear(gear models.Gear) {
 *
  */
 func (f Forge) GenerateRarity(forgeLevel int) int {
-	forgeLevel = 20
+	forgeLevel = 2
 	rarityWeights := []float64{
 		0.55,  // Junk
 		0.30,  // Common
@@ -84,10 +84,11 @@ func (f Forge) GenerateRarity(forgeLevel int) int {
 	}
 	rand.Seed(time.Now().UnixNano())
 
-	forgeLevelFloat := float64(forgeLevel)
-	probability := (forgeLevelFloat-10)*0.001 + 0.005
+	//forgeLevelFloat := float64(forgeLevel)
+	probability := math.Pow(float64(forgeLevel-10), 2) * 0.0002
+	//probability := (forgeLevelFloat - 10) * 0.002 //1 + 0.005
 	for i := len(rarityWeights) - 1; i >= 0; i-- {
-		rarityIndex := rand.Float64() * 1.0003
+		rarityIndex := rand.Float64()
 		weight := float64(rarityWeights[i])
 		fmt.Printf("roll: %2f weight %2f\n", rarityIndex, weight+probability)
 		if rarityIndex <= (weight + probability) {

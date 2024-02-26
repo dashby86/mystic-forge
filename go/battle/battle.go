@@ -2,6 +2,7 @@ package battle
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"math/rand"
 	"mf/enemy"
 	"mf/models"
@@ -20,6 +21,8 @@ func (battle Battle) SimBattle() {
 	//turn := 1
 	enemyHp := battle.Enemy.HP
 	playerHp := battle.Player.HP
+
+	spew.Dump(battle.Enemy)
 
 	fmt.Printf("Starting battle! Player life: %d  -- Enemy life: %d\n", playerHp, enemyHp)
 
@@ -46,6 +49,17 @@ func (battle Battle) SimBattle() {
 		if enemyHp <= 0 {
 			fmt.Println("The enemy has died.")
 
+			currentDungeonLevel := battle.Player.DungeonLevel + 1
+			err := battle.Sql.UpdateDungeonLevel(battle.Player.Id, currentDungeonLevel)
+			if err != nil {
+				// Handle the error
+			}
+
+			_, err = battle.Sql.GrantOre(battle.Player.Id, 10)
+			if err != nil {
+				// Handle the error
+			}
+
 			break
 		}
 
@@ -58,7 +72,7 @@ func (battle Battle) SimBattle() {
 func playerAttacks(player models.Player, enemy enemy.Enemy, playerHp *int, enemyHp *int) {
 	// Calculate the player's damage.
 	damage := player.Attack
-	baseReduction := float64(enemy.Defense) / (float64(enemy.Defense) + 100.0) // Add .0 to the constant
+	baseReduction := float64(enemy.Defense) / (float64(enemy.Defense) + 200.0) // Add .0 to the constant
 	// Constant of 100 for now
 	mitigatedDamage := int(float64(damage) * baseReduction)
 	finalDamage := max(damage-mitigatedDamage, 0)
@@ -68,7 +82,7 @@ func playerAttacks(player models.Player, enemy enemy.Enemy, playerHp *int, enemy
 		finalDamage *= 2
 	}
 
-	if float64(rand.Intn(100)) < player.Dodge { // Convert to float64
+	if float64(rand.Intn(100)) < enemy.Dodge { // Convert to float64
 		fmt.Println("Enemy Dodged!")
 	} else {
 		// Apply the damage to the enemy.
@@ -79,18 +93,20 @@ func playerAttacks(player models.Player, enemy enemy.Enemy, playerHp *int, enemy
 	fmt.Println("Enemy Defense:", enemy.Defense)
 	fmt.Println("Base Reduction:", baseReduction)
 	fmt.Println("Mitigated Damage:", mitigatedDamage)
+
+	fmt.Println("\n\n\n")
 }
 
 func enemyAttacks(player models.Player, enemy enemy.Enemy, playerHp *int, enemyHp *int) {
 	// Calculate the enemy's damage.
 
 	damage := enemy.Attack
-	baseReduction := float64(player.Defense) / (float64(player.Defense) + 100.0) // Add .0 to the constant
+	baseReduction := float64(player.Defense) / (float64(player.Defense) + 200.0) // Add .0 to the constant
 	// Constant of 100 for now
 	mitigatedDamage := int(float64(damage) * baseReduction)
 	finalDamage := max(damage-mitigatedDamage, 0)
 
-	if rand.Intn(100) < enemy.Crit {
+	if float64(rand.Intn(100)) < enemy.Crit {
 		finalDamage *= 2
 	}
 
