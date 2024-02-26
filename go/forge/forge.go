@@ -23,10 +23,7 @@ func (f Forge) CraftGear() models.Gear {
 	level := generateLevel(playerLevel)
 	fmt.Println("player level: ", playerLevel, "   level: ", level)
 	tier := f.GenerateRarity(f.Player.ForgeLevel)
-	statPool := 10.0
-	crit, statPool := calculateSpecializedStat("Crit", level, tier, statPool)
-	dodge, statPool := calculateSpecializedStat("Dodge", level, tier, statPool)
-	block, statPool := calculateSpecializedStat("Block", level, tier, statPool)
+	crit, dodge, block := calculateSpecializedStat(level, tier)
 
 	gear := models.Gear{
 		Level:   level,
@@ -132,7 +129,11 @@ func generateLevel(playerLevel int) int {
 		playerLevel + 2,
 		playerLevel + 3,
 	}
-	return odds[rand.Intn(10)+1]
+	level := odds[rand.Intn(10)+1]
+	if level < 1 {
+		level = 1
+	}
+	return level
 }
 
 func calculateLevelAndExpRequired(accumulatedExp float64) (int, float64) {
@@ -157,18 +158,66 @@ func (f Forge) grantExp(exp int) {
 
 }
 
-func calculateSpecializedStat(statName string, gearLevel int, tier int, remainingPool float64) (float64, float64) {
+func calculateSpecializedStat(gearLevel int, tier int) (float64, float64, float64) {
 	// ... (Your allocation logic) ...
-	receiveStats := rand.Intn(3) == 0 // Adjust probability as desired
+	primaryStatIndex := rand.Intn(3)
+	allocationPool := float64(tier) * 1 * 1.75
+	var crit float64
+	var dodge float64
+	var block float64
 
-	if receiveStats {
-		// 2. Adjust stat allocation logic (placeholder)
-		statValue := math.Min(remainingPool, float64(gearLevel)*float64(tier)*0.5)
-
-		// 3. Subtract from the pool
-		remainingPool -= statValue
-		return statValue, remainingPool
-	} else {
-		return 0.0, remainingPool
+	switch primaryStatIndex {
+	case 0:
+		crit = allocationPool * 0.7
+	case 1:
+		dodge = allocationPool * 0.7
+	case 2:
+		block = allocationPool * 0.7
 	}
+
+	if rand.Float64() < 0.8 { // 80% chance for a single secondary stat
+		secondaryStatIndex := rand.Intn(3)
+		multiplier := 0.3
+		if secondaryStatIndex == primaryStatIndex {
+			multiplier = .5
+		}
+
+		switch secondaryStatIndex {
+		case 0:
+			crit = allocationPool * multiplier
+		case 1:
+			dodge = allocationPool * multiplier
+		case 2:
+			block = allocationPool * multiplier
+		}
+	} else {
+		remainingPool := allocationPool * 0.3
+		secondaryStatIndex1 := rand.Intn(3)
+		for secondaryStatIndex1 == primaryStatIndex {
+			secondaryStatIndex1 = rand.Intn(3) // Ensure indices are different
+		}
+		secondaryStatIndex2 := 3 - primaryStatIndex - secondaryStatIndex1 // Third remaining index
+
+		secondaryStat1Share := remainingPool * rand.Float64() // Random split
+		secondaryStat2Share := remainingPool - secondaryStat1Share
+
+		// Assign the values based on the calculated indices
+		if secondaryStatIndex1 == 0 {
+			crit = secondaryStat1Share
+		} else if secondaryStatIndex1 == 1 {
+			dodge = secondaryStat1Share
+		} else {
+			block = secondaryStat1Share
+		}
+
+		if secondaryStatIndex2 == 0 {
+			crit = secondaryStat2Share
+		} else if secondaryStatIndex2 == 1 {
+			dodge = secondaryStat2Share
+		} else {
+			block = secondaryStat2Share
+		}
+	}
+
+	return crit, dodge, block
 }

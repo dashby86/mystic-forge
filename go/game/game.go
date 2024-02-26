@@ -556,9 +556,9 @@ func (g *Game) Battle() {
 	enemy := enemy.Enemy{
 		Name:    "Goblin",
 		Level:   1,
-		HP:      2000,
-		Attack:  500,
-		Defense: 400,
+		HP:      1200,
+		Attack:  300,
+		Defense: 120,
 		Speed:   3,
 		Crit:    3,
 		Dodge:   2,

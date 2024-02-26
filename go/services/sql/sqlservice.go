@@ -127,7 +127,8 @@ func (s SqlService) GetEquipedGearBySlot(playerId int, slotId int) (models.Gear,
 }
 
 func (s SqlService) GrantExp(playerId int, exp int) error {
-	stmt, err := s.DB.Prepare("UPDATE PLAYER SET player_exp = player_exp + ? WHERE id = ?")
+	fmt.Println("UPDATE player SET player_exp = player_exp + ", +exp, " WHERE id = ", playerId)
+	stmt, err := s.DB.Prepare("UPDATE player SET player_exp = player_exp + ? WHERE id = ?")
 	_, err = stmt.Exec(exp, playerId)
 	if err != nil {
 		return fmt.Errorf("failed to execute the query: %v", err)
@@ -136,11 +137,11 @@ func (s SqlService) GrantExp(playerId int, exp int) error {
 	return nil
 }
 func (s SqlService) GrantForgeExp(playerId int, exp int) error {
-	stmt, err := s.DB.Prepare("UPDATE PLAYER SET player_exp = player_exp + ? WHERE id = ?")
-	_, err = stmt.Exec(exp, playerId)
-	if err != nil {
-		return fmt.Errorf("failed to execute the query: %v", err)
-	}
+	//stmt, err := s.DB.Prepare("UPDATE PLAYER SET player_exp = player_exp + ? WHERE id = ?")
+	//_, err = stmt.Exec(exp, playerId)
+	//if err != nil {
+	//	return fmt.Errorf("failed to execute the query: %v", err)
+	//}
 	return nil
 }
 
@@ -163,6 +164,7 @@ func levelUpPlayer(s SqlService, playerID int) (bool, error) {
 	var currentLevel, currentExp int
 	err = tx.QueryRow("SELECT player_level, player_exp FROM player WHERE id = ? FOR UPDATE", playerID).Scan(&currentLevel, &currentExp)
 	if err != nil {
+		fmt.Println(err)
 		tx.Rollback()
 		return false, err
 	}
@@ -182,6 +184,7 @@ func levelUpPlayer(s SqlService, playerID int) (bool, error) {
 	if leveledUp {
 		_, err = tx.Exec("UPDATE player SET player_level = ?, player_exp = ? WHERE id = ?", currentLevel, currentExp, playerID)
 		if err != nil {
+			fmt.Println(err)
 			tx.Rollback()
 			return false, err
 		}
