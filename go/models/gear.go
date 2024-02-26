@@ -15,6 +15,21 @@ type Gear struct {
 	Rarity  int
 }
 
+/*
+*
+*Junk
+Common
+Uncommon
+Rare
+Epic
+Mythic
+Legendary
+Ancient
+Cosmic
+Ethereal
+Primordial
+Divine
+*/
 func (g Gear) GetRarity(rarity int) string {
 	fmt.Println("rarity: ", rarity)
 	switch rarity {

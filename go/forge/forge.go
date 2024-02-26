@@ -23,15 +23,20 @@ func (f Forge) CraftGear() models.Gear {
 	level := generateLevel(playerLevel)
 	fmt.Println("player level: ", playerLevel, "   level: ", level)
 	tier := f.GenerateRarity(f.Player.ForgeLevel)
+	statPool := 10.0
+	crit, statPool := calculateSpecializedStat("Crit", level, tier, statPool)
+	dodge, statPool := calculateSpecializedStat("Dodge", level, tier, statPool)
+	block, statPool := calculateSpecializedStat("Block", level, tier, statPool)
+
 	gear := models.Gear{
 		Level:   level,
 		HP:      determineBaseStats(20, level, tier),
 		Attack:  determineBaseStats(4, level, tier),
 		Defense: determineBaseStats(2, level, tier),
 		Speed:   determineBaseStats(1, level, tier),
-		Crit:    rand.Float64() + 1,
-		Dodge:   rand.Float64() + 1,
-		Block:   rand.Float64() + 1,
+		Crit:    crit,
+		Dodge:   dodge,
+		Block:   block,
 		SlotId:  rand.Intn(8) + 1,
 		Rarity:  tier,
 	}
@@ -150,4 +155,20 @@ func calculateLevelAndExpRequired(accumulatedExp float64) (int, float64) {
 
 func (f Forge) grantExp(exp int) {
 
+}
+
+func calculateSpecializedStat(statName string, gearLevel int, tier int, remainingPool float64) (float64, float64) {
+	// ... (Your allocation logic) ...
+	receiveStats := rand.Intn(3) == 0 // Adjust probability as desired
+
+	if receiveStats {
+		// 2. Adjust stat allocation logic (placeholder)
+		statValue := math.Min(remainingPool, float64(gearLevel)*float64(tier)*0.5)
+
+		// 3. Subtract from the pool
+		remainingPool -= statValue
+		return statValue, remainingPool
+	} else {
+		return 0.0, remainingPool
+	}
 }
