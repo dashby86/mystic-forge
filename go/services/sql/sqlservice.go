@@ -212,3 +212,22 @@ func (s SqlService) UpdateDungeonLevel(playerID int, dungeonLevel int) error {
 	}
 	return nil
 }
+
+func (s SqlService) UpdateForgeLevel(player models.Player) error {
+	if (player.DungeonLevel-1)%10 == 0 {
+		player.ForgeLevel++
+		stmt, err := s.DB.Prepare("UPDATE player SET forge_level = forge_level + 1 WHERE id = ?")
+		if err != nil {
+			return fmt.Errorf("failed to prepare the SQL statement: %v", err)
+		}
+		defer stmt.Close()
+
+		_, err = stmt.Exec(player.Id)
+		if err != nil {
+			return fmt.Errorf("failed to execute the query: %v", err)
+		}
+		return nil
+		// Optionally: Display a message to the player about the forge level-up
+	}
+	return nil
+}

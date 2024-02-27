@@ -14,7 +14,6 @@ import (
 	my_image "image"
 	"image/color"
 	"log"
-	"math/rand"
 	"mf/battle"
 	"mf/enemy"
 	"mf/forge"
@@ -581,9 +580,7 @@ func (g *Game) forge() {
 	if g.Crafted == false && g.Player.Ore > 0 {
 		// Craft equipment
 		fmt.Println("Crafting equipment...")
-		//gear := models.Gear{}
 		g.Player, _ = g.Sql.GetPlayerByID()
-		g.Forge.GenerateRarity(rand.Intn(50) + 1)
 		gear := g.Forge.CraftGear()
 		_, _ = g.Sql.SpendOre(1)
 		g.CraftedGear = gear

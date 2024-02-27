@@ -26,9 +26,9 @@ Mythic
 Legendary
 Ancient
 Cosmic
-Ethereal
-Primordial
 Divine
+Primordial
+Celestial
 */
 func (g Gear) GetRarity(rarity int) string {
 	fmt.Println("rarity: ", rarity)

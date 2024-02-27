@@ -59,6 +59,10 @@ func (battle Battle) SimBattle() {
 			if err != nil {
 				// Handle the error
 			}
+			err = battle.Sql.UpdateForgeLevel(battle.Player)
+			if err != nil {
+				// Handle the error
+			}
 
 			break
 		}

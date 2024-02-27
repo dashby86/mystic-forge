@@ -2,6 +2,7 @@ package forge
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"log"
 	"math"
 	"math/rand"
@@ -16,8 +17,8 @@ type Forge struct {
 }
 
 func (f Forge) CraftGear() models.Gear {
-	calculateLevelAndExpRequired(2000)
-	rand.Seed(time.Now().UnixNano())
+	//calculateLevelAndExpRequired(2000)
+	//rand.Seed(time.Now().UnixNano())
 	//random level for testing
 	playerLevel := f.Player.Level
 	level := generateLevel(playerLevel)
@@ -70,36 +71,39 @@ func (f Forge) EquipGear(gear models.Gear) {
 *
  */
 func (f Forge) GenerateRarity(forgeLevel int) int {
-	forgeLevel = 2
-	rarityWeights := []float64{
-		0.55,  // Junk
-		0.30,  // Common
-		0.15,  // Uncommon
-		0.05,  // Rare
-		0.005, // Epic
-	}
-	if forgeLevel >= 10 {
-		rarityWeights = append(rarityWeights, 0.0002) // Legendary
-	}
-	if forgeLevel >= 20 {
-		rarityWeights = append(rarityWeights, 0.0001) // Mythic
-	}
-	rand.Seed(time.Now().UnixNano())
+	//forgeLevel = 20
+	maxUnlockedTier := (forgeLevel + 15) / 5 // Note: Subtract 1 since unlocking starts at 0
 
-	//forgeLevelFloat := float64(forgeLevel)
-	probability := math.Pow(float64(forgeLevel-10), 2) * 0.0002
-	//probability := (forgeLevelFloat - 10) * 0.002 //1 + 0.005
-	for i := len(rarityWeights) - 1; i >= 0; i-- {
+	spew.Dump(rarityWeights)
+	fmt.Println("HRERERERE ", maxUnlockedTier+1)
+	activeRarityWeights := make([]float64, maxUnlockedTier+1)
+	copy(activeRarityWeights, rarityWeights[:maxUnlockedTier+1])
+	probabilityIncrease := 0.0025 // 0.025% per forge level
+	//forgeLevelOffset := (float64(forgeLevel) - 1) * probabilityIncrease
+
+	// Apply the offset to active weights
+	for i := range activeRarityWeights {
+		fmt.Printf("%s base: %2f\n", rarityNames[i], activeRarityWeights[i])
+		tierUnlockLevel := unlockLevel[i] // Calculate the forge level at which this tier unlocks
+		levelOffset := float64(forgeLevel-tierUnlockLevel) * (probabilityIncrease * tierMultiplier[i])
+		if levelOffset > 0 { // Apply only if forge level is higher than unlock level
+			fmt.Printf("ADDING %2f + %2f \n\n", activeRarityWeights[i], levelOffset)
+			activeRarityWeights[i] = activeRarityWeights[i] + levelOffset
+		} else {
+			fmt.Printf("no its mot higher %d\n\n", i)
+		}
+	}
+
+	for i := len(activeRarityWeights) - 1; i >= 0; i-- {
 		rarityIndex := rand.Float64()
-		weight := float64(rarityWeights[i])
-		fmt.Printf("roll: %2f weight %2f\n", rarityIndex, weight+probability)
-		if rarityIndex <= (weight + probability) {
+		weight := activeRarityWeights[i]
+		fmt.Printf("roll: %2f weight %2f\n", rarityIndex, weight)
+		if rarityIndex <= (weight) {
 			rarity := rarityNames[i]
-			prob := (weight + probability) / 1.0003
-			fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity:", rarity, "Probability:", prob)
+			fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity:", rarity, "Probability:", weight)
 			return i
 		}
-		fmt.Println("Forge Level:", forgeLevel, "Rarity:", rarityNames[i], "Probability:", (weight+probability)/1.0003)
+		fmt.Println("Forge Level:", forgeLevel, "Rarity:", rarityNames[i], "Probability:", (weight))
 	}
 	fmt.Println("Crafted - Forge Level:", forgeLevel, "Rarity: Junk", "Probability: Default")
 	return 0
@@ -113,6 +117,56 @@ var rarityNames = []string{
 	"Epic",
 	"Legendary",
 	"Mythic",
+	"Ancient",
+	"Cosmic",
+	"Divine",
+	"Primordial",
+	"Celestial",
+}
+
+var rarityWeights = []float64{
+	1.00,   // Junk
+	0.45,   // Common
+	0.25,   // Uncommon
+	0.15,   // Rare
+	0.05,   // epic
+	0.01,   // legendary
+	0.005,  // mythic
+	0.005,  // Ancient
+	0.001,  // Cosmic
+	0.001,  // Divine
+	0.001,  // Primordial
+	0.0005, // Celestial
+}
+
+var tierMultiplier = []float64{
+	1,  // Junk
+	10, // Common
+	7,  // Uncommon
+	3,  // Rare
+	3,  // epic
+	2,  // legendary
+	2,  // mythic
+	1,  // Ancient
+	1,  // Cosmic
+	1,  // Divine
+	1,  // Primordial
+	1,  // Celestial
+}
+
+var unlockLevel = []int{
+	1,  // Junk
+	1,  // Common
+	1,  // Uncommon
+	1,  // Rare
+	5,  // epic
+	10, // legendary
+	15, // mythic
+	20, // Ancient
+	25, // Cosmic
+	30, // Divine
+	35, // Primordial
+	40, // Celestial
 }
 
 func generateLevel(playerLevel int) int {
